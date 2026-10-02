@@ -1,0 +1,255 @@
+export type GameStatus = 'available' | 'coming_soon' | 'locked'
+
+export type GameId =
+  | 'reading'
+  | 'typing'
+  | 'memory'
+  | 'math'
+  | 'science'
+  | 'english'
+  | 'creativity'
+
+export type ActivityKind =
+  | 'letter_choice'
+  | 'letter_from_image'
+  | 'syllable_build'
+  | 'word_select'
+  | 'word_build'
+  | 'key_press'
+  | 'home_row'
+  | 'letter_race'
+  | 'syllable_type'
+  | 'word_type'
+
+export interface ChildProfileSeed {
+  id: string
+  name: string
+  avatar: string
+  accent: string
+}
+
+export interface ChildProfile extends ChildProfileSeed {
+  level: number
+  xp: number
+  points: number
+  coins: number
+  streakDays: number
+  lastPlayedDate: string | null
+  achievements: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface GameDefinition {
+  id: GameId
+  slug: string
+  title: string
+  shortTitle: string
+  description: string
+  icon: string
+  status: GameStatus
+  accent: string
+  totalLevels: number
+}
+
+export interface GameLevelMeta {
+  id: string
+  gameId: GameId
+  order: number
+  title: string
+  subtitle: string
+  icon: string
+  lessonIds: string[]
+}
+
+export interface ChoiceOption {
+  id: string
+  label: string
+  value: string
+}
+
+export interface BaseActivity {
+  id: string
+  kind: ActivityKind
+  prompt: string
+  xpReward?: number
+  coinReward?: number
+}
+
+export interface LetterChoiceActivity extends BaseActivity {
+  kind: 'letter_choice'
+  letter: string
+  options: ChoiceOption[]
+  answer: string
+}
+
+export interface LetterFromImageActivity extends BaseActivity {
+  kind: 'letter_from_image'
+  image: string
+  wordHint?: string
+  options: ChoiceOption[]
+  answer: string
+}
+
+export interface SyllableBuildActivity extends BaseActivity {
+  kind: 'syllable_build'
+  parts: string[]
+  answer: string
+  options: ChoiceOption[]
+}
+
+export interface WordSelectActivity extends BaseActivity {
+  kind: 'word_select'
+  image?: string
+  word: string
+  options: ChoiceOption[]
+  answer: string
+}
+
+export interface WordBuildActivity extends BaseActivity {
+  kind: 'word_build'
+  word: string
+  image?: string
+  scrambled: string[]
+}
+
+export interface KeyPressActivity extends BaseActivity {
+  kind: 'key_press'
+  key: string
+  fingerHint?: string
+}
+
+export interface HomeRowActivity extends BaseActivity {
+  kind: 'home_row'
+  key: string
+  fingerHint: string
+  hand: 'left' | 'right'
+}
+
+export interface LetterRaceActivity extends BaseActivity {
+  kind: 'letter_race'
+  letters: string[]
+}
+
+export interface SyllableTypeActivity extends BaseActivity {
+  kind: 'syllable_type'
+  target: string
+}
+
+export interface WordTypeActivity extends BaseActivity {
+  kind: 'word_type'
+  target: string
+}
+
+export type Activity =
+  | LetterChoiceActivity
+  | LetterFromImageActivity
+  | SyllableBuildActivity
+  | WordSelectActivity
+  | WordBuildActivity
+  | KeyPressActivity
+  | HomeRowActivity
+  | LetterRaceActivity
+  | SyllableTypeActivity
+  | WordTypeActivity
+
+export interface LessonDefinition {
+  id: string
+  gameId: GameId
+  levelId: string
+  title: string
+  activities: Activity[]
+}
+
+export interface LessonProgress {
+  lessonId: string
+  stars: number
+  bestAccuracy: number
+  completions: number
+  lastPlayedAt: string | null
+  unlocked: boolean
+}
+
+export interface LevelProgress {
+  levelId: string
+  unlocked: boolean
+  stars: number
+  completedLessons: number
+  totalLessons: number
+}
+
+export interface GameProgress {
+  gameId: GameId
+  unlockedLevelIds: string[]
+  lessonProgress: Record<string, LessonProgress>
+  stats: GameStats
+}
+
+export interface ReadingStats {
+  wordsLearned: string[]
+  lessonsCompleted: number
+  correctAnswers: number
+  totalAnswers: number
+}
+
+export interface TypingStats {
+  bestWpm: number
+  bestAccuracy: number
+  keysPracticed: string[]
+  lessonsCompleted: number
+  totalKeystrokes: number
+  correctKeystrokes: number
+}
+
+export type GameStats = ReadingStats | TypingStats | Record<string, never>
+
+export interface AchievementDefinition {
+  id: string
+  title: string
+  description: string
+  icon: string
+  gameId?: GameId | 'global'
+}
+
+export interface RewardPayload {
+  xp: number
+  coins: number
+  points: number
+  achievements: AchievementDefinition[]
+  leveledUp: boolean
+  newLevel: number
+}
+
+export interface ActivityAttemptResult {
+  activityId: string
+  correct: boolean
+  attempts: number
+  timeMs: number
+  typedChars?: number
+  correctChars?: number
+}
+
+export interface LessonSessionResult {
+  gameId: GameId
+  levelId: string
+  lessonId: string
+  results: ActivityAttemptResult[]
+  accuracy: number
+  stars: number
+  durationMs: number
+  wpm?: number
+  words?: string[]
+}
+
+export interface AppState {
+  version: number
+  soundEnabled: boolean
+  activeProfileId: string | null
+  profiles: Record<string, ChildProfile>
+  progress: Record<string, Record<GameId, GameProgress>>
+}
+
+export interface AdaptiveHint {
+  mode: 'challenge' | 'reinforce' | 'steady'
+  message: string
+}
