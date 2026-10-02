@@ -72,6 +72,7 @@ interface AppContextValue {
   }) => AdminPassageItem
   removeWordMaterial: (id: string) => void
   removePassageMaterial: (id: string) => void
+  updateProfileAvatar: (profileId: string, avatarImage: string) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -83,10 +84,19 @@ function migrateState(raw: AppState | null): AppState {
   const profiles = { ...base.profiles }
   for (const [id, profile] of Object.entries(raw.profiles ?? {})) {
     const seed = PROFILE_SEEDS.find((item) => item.id === id)
+    const savedAvatar = profile.avatarImage
+    const isLegacyDefault =
+      typeof savedAvatar === 'string' &&
+      savedAvatar.startsWith('/avatars/') &&
+      !savedAvatar.includes('?v=2') &&
+      !savedAvatar.startsWith('data:')
+
     profiles[id] = {
       ...profiles[id],
       ...profile,
-      avatarImage: profile.avatarImage ?? seed?.avatarImage ?? '/avatars/isabella.png',
+      avatarImage: isLegacyDefault
+        ? (seed?.avatarImage ?? '/avatars/isabella.png?v=2')
+        : (savedAvatar ?? seed?.avatarImage ?? '/avatars/isabella.png?v=2'),
       accent: profile.accent ?? seed?.accent ?? '#0f9b8e',
     }
   }
@@ -348,6 +358,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }))
   }, [])
 
+  const updateProfileAvatar = useCallback((profileId: string, avatarImage: string) => {
+    setState((prev) => {
+      const profile = prev.profiles[profileId]
+      if (!profile) return prev
+      return {
+        ...prev,
+        profiles: {
+          ...prev.profiles,
+          [profileId]: {
+            ...profile,
+            avatarImage,
+            updatedAt: new Date().toISOString(),
+          },
+        },
+      }
+    })
+  }, [])
+
   const value = useMemo<AppContextValue>(
     () => ({
       ready,
@@ -367,6 +395,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addPassageMaterial,
       removeWordMaterial,
       removePassageMaterial,
+      updateProfileAvatar,
     }),
     [
       ready,
@@ -386,6 +415,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       addPassageMaterial,
       removeWordMaterial,
       removePassageMaterial,
+      updateProfileAvatar,
     ],
   )
 

@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { GameCard } from '@/components/game/GameCard'
 import { TopBar } from '@/components/layout/TopBar'
 import { Avatar } from '@/components/profile/Avatar'
+import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -16,7 +18,8 @@ import type { ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress, state } = useApp()
+  const { activeProfile, getGameProgress, state, updateProfileAvatar } = useApp()
+  const [editingAvatar, setEditingAvatar] = useState(false)
 
   if (!activeProfile) {
     return <Navigate to="/" replace />
@@ -37,12 +40,23 @@ export function DashboardPage() {
 
       <section className="mb-8 rounded-[2rem] bg-white/80 p-5 shadow-[0_12px_30px_rgba(31,42,55,0.08)] sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <Avatar
-            name={activeProfile.name}
-            src={activeProfile.avatarImage}
-            accent={activeProfile.accent}
-            size="lg"
-          />
+          <div className="flex flex-col items-center gap-2 sm:items-start">
+            <Avatar
+              name={activeProfile.name}
+              src={activeProfile.avatarImage}
+              accent={activeProfile.accent}
+              size="lg"
+              focus="center"
+            />
+            <Button
+              size="md"
+              variant="secondary"
+              className="!min-h-10"
+              onClick={() => setEditingAvatar((value) => !value)}
+            >
+              {editingAvatar ? 'Cerrar' : 'Cambiar foto'}
+            </Button>
+          </div>
           <div className="flex-1 space-y-3">
             <h1 className="font-display text-4xl font-bold text-ink">
               ¡Hola, {activeProfile.name}!
@@ -55,6 +69,20 @@ export function DashboardPage() {
             />
           </div>
         </div>
+
+        {editingAvatar ? (
+          <div className="mt-5 rounded-[1.5rem] bg-sand/60 p-4 sm:p-5">
+            <h2 className="mb-3 font-display text-xl font-bold">Actualizar foto de perfil</h2>
+            <AvatarUploader
+              profile={activeProfile}
+              compact
+              onSave={(avatarImage) => {
+                updateProfileAvatar(activeProfile.id, avatarImage)
+                setEditingAvatar(false)
+              }}
+            />
+          </div>
+        ) : null}
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatPill icon="⭐" label="XP" value={formatNumber(activeProfile.xp)} />

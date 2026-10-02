@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { Avatar } from '@/components/profile/Avatar'
+import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -23,8 +24,10 @@ export function AdminPanelPage() {
     removeWordMaterial,
     removePassageMaterial,
     getGameProgress,
+    updateProfileAvatar,
   } = useApp()
   const [tab, setTab] = useState<Tab>('progress')
+  const [editingAvatarId, setEditingAvatarId] = useState<string | null>(null)
 
   const [word, setWord] = useState('')
   const [clue, setClue] = useState('')
@@ -86,18 +89,46 @@ export function AdminPanelPage() {
 
             return (
               <article key={profile.id} className="rounded-[1.75rem] bg-white/90 p-5 ring-1 ring-ink/5">
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    name={profile.name}
-                    src={profile.avatarImage}
-                    accent={profile.accent}
-                    size="md"
-                  />
-                  <div>
-                    <h2 className="font-display text-2xl font-bold">{profile.name}</h2>
-                    <p className="font-semibold text-ink-soft">Nivel {profile.level}</p>
+                {editingAvatarId === profile.id ? (
+                  <div className="mb-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <h2 className="font-display text-2xl font-bold">Foto de {profile.name}</h2>
+                      <Button size="md" variant="ghost" onClick={() => setEditingAvatarId(null)}>
+                        Cerrar
+                      </Button>
+                    </div>
+                    <AvatarUploader
+                      profile={profile}
+                      compact
+                      onSave={(avatarImage) => {
+                        updateProfileAvatar(profile.id, avatarImage)
+                        setEditingAvatarId(null)
+                      }}
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={profile.name}
+                      src={profile.avatarImage}
+                      accent={profile.accent}
+                      size="md"
+                      focus="center"
+                    />
+                    <div>
+                      <h2 className="font-display text-2xl font-bold">{profile.name}</h2>
+                      <p className="font-semibold text-ink-soft">Nivel {profile.level}</p>
+                      <Button
+                        size="md"
+                        variant="secondary"
+                        className="mt-2 !min-h-10"
+                        onClick={() => setEditingAvatarId(profile.id)}
+                      >
+                        Cambiar foto
+                      </Button>
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4 space-y-2 text-sm font-semibold text-ink-soft">
                   <p>⭐ XP: {formatNumber(profile.xp)}</p>

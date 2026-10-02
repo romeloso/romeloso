@@ -6,12 +6,15 @@ export function Avatar({
   size = 'lg',
   className,
   accent = '#0f9b8e',
+  focus = 'center',
 }: {
   name: string
   src: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   className?: string
   accent?: string
+  /** Encuadre del rostro dentro del círculo. */
+  focus?: 'center' | 'top'
 }) {
   const sizes = {
     sm: 'h-12 w-12',
@@ -23,7 +26,7 @@ export function Avatar({
   return (
     <span
       className={cn(
-        'inline-block overflow-hidden rounded-full bg-white shadow-inner ring-4 ring-white',
+        'relative inline-block overflow-hidden rounded-full bg-white ring-4 ring-white',
         sizes[size],
         className,
       )}
@@ -32,7 +35,10 @@ export function Avatar({
       <img
         src={src}
         alt={`Avatar de ${name}`}
-        className="h-full w-full object-cover object-top"
+        className={cn(
+          'h-full w-full scale-[1.08] object-cover',
+          focus === 'center' ? 'object-center' : 'object-top',
+        )}
         draggable={false}
       />
     </span>
