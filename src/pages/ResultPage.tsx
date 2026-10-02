@@ -100,7 +100,7 @@ export function ResultPage() {
             Siguiente reto
           </Button>
           <Button variant="ghost" className="bg-white ring-1 ring-ink/10" onClick={() => navigate('/dashboard')}>
-            Dashboard
+            Ir al inicio
           </Button>
         </div>
       </section>

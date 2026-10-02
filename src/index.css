@@ -59,6 +59,11 @@
     outline: 3px solid var(--color-sky);
     outline-offset: 3px;
   }
+
+  button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
 }
 
 @layer utilities {

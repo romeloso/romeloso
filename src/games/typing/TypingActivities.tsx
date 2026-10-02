@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { VirtualKeyboard } from '@/components/game/VirtualKeyboard'
 import type {
   Activity,
@@ -19,17 +19,22 @@ function normalizeKey(key: string) {
 }
 
 function usePhysicalKey(handler: (key: string) => void, enabled = true) {
+  const handlerRef = useRef(handler)
+  handlerRef.current = handler
+
   useEffect(() => {
     if (!enabled) return
     const onKeyDown = (event: KeyboardEvent) => {
       const key = normalizeKey(event.key)
       if (!key) return
+      // Evita interferir con atajos del navegador que usan modificadores.
+      if (event.ctrlKey || event.metaKey || event.altKey) return
       event.preventDefault()
-      handler(key)
+      handlerRef.current(key)
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [handler, enabled])
+  }, [enabled])
 }
 
 function KeyTarget({
@@ -60,7 +65,7 @@ function KeyTarget({
         {activity.key}
       </div>
       {fingerHint ? (
-        <p className="rounded-2xl bg-sun/50 px-4 py-2 text-base font-bold inline-block">
+        <p className="inline-block rounded-2xl bg-sun/50 px-4 py-2 text-base font-bold">
           {fingerHint}
         </p>
       ) : null}

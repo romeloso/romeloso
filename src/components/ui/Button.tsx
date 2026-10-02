@@ -31,11 +31,13 @@ export function Button({
   variant = 'primary',
   size = 'lg',
   className,
+  type = 'button',
   children,
   ...props
 }: ButtonProps) {
   return (
     <button
+      type={type}
       className={cn(
         'inline-flex items-center justify-center gap-2 font-bold transition-transform disabled:cursor-not-allowed disabled:opacity-50',
         variants[variant],

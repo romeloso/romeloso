@@ -40,16 +40,16 @@ export function createInitialGameProgress(
   const lessonProgress: Record<string, LessonProgress> = {}
 
   for (const level of levels) {
-    for (const lessonId of level.lessonIds) {
+    level.lessonIds.forEach((lessonId, index) => {
       lessonProgress[lessonId] = {
         lessonId,
         stars: 0,
         bestAccuracy: 0,
         completions: 0,
         lastPlayedAt: null,
-        unlocked: level.id === firstLevel?.id,
+        unlocked: level.id === firstLevel?.id && index === 0,
       }
-    }
+    })
   }
 
   return {

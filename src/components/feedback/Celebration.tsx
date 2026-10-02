@@ -32,7 +32,11 @@ export function FeedbackBanner({
   }
 
   return (
-    <div className={`rounded-3xl px-5 py-4 text-center ring-2 ${tones[tone]}`}>
+    <div
+      className={`pointer-events-none rounded-3xl px-5 py-4 text-center ring-2 ${tones[tone]}`}
+      role="status"
+      aria-live="polite"
+    >
       <p className="font-display text-2xl font-bold">{title}</p>
       {subtitle ? <p className="mt-1 font-semibold text-ink-soft">{subtitle}</p> : null}
     </div>
