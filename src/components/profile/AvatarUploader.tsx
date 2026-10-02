@@ -39,7 +39,7 @@ export function AvatarUploader({
   }
 
   return (
-    <div className={compact ? 'flex flex-col items-start gap-3' : 'flex flex-col items-center gap-4'}>
+    <div className="flex flex-col items-center gap-3 text-center">
       <Avatar
         name={profile.name}
         src={currentSrc}
@@ -60,14 +60,14 @@ export function AvatarUploader({
         }}
       />
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-2">
         <Button
           size="md"
           variant="secondary"
           disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
-          {busy ? 'Cargando…' : 'Cambiar foto'}
+          {busy ? 'Cargando…' : 'Elegir imagen'}
         </Button>
         {preview ? (
           <Button
@@ -96,8 +96,8 @@ export function AvatarUploader({
       </div>
 
       {error ? <p className="text-sm font-bold text-coral">{error}</p> : null}
-      <p className="text-xs font-semibold text-ink-soft">
-        PNG, JPG o WEBP. Se centra automáticamente el rostro.
+      <p className="max-w-sm text-xs font-semibold text-ink-soft">
+        PNG, JPG o WEBP. La foto se centra automáticamente.
       </p>
     </div>
   )

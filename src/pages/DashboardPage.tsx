@@ -71,7 +71,7 @@ export function DashboardPage() {
         </div>
 
         {editingAvatar ? (
-          <div className="mt-5 rounded-[1.5rem] bg-sand/60 p-4 sm:p-5">
+          <div className="mt-5 rounded-[1.5rem] bg-sand/60 p-4 text-center sm:p-5">
             <h2 className="mb-3 font-display text-xl font-bold">Actualizar foto de perfil</h2>
             <AvatarUploader
               profile={activeProfile}
