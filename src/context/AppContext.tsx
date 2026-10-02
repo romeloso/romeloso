@@ -85,18 +85,18 @@ function migrateState(raw: AppState | null): AppState {
   for (const [id, profile] of Object.entries(raw.profiles ?? {})) {
     const seed = PROFILE_SEEDS.find((item) => item.id === id)
     const savedAvatar = profile.avatarImage
-    const isLegacyDefault =
+    const isCustomUpload = typeof savedAvatar === 'string' && savedAvatar.startsWith('data:')
+    const isPhotoOrCartoon =
       typeof savedAvatar === 'string' &&
-      savedAvatar.startsWith('/avatars/') &&
-      !savedAvatar.includes('?v=2') &&
-      !savedAvatar.startsWith('data:')
+      (savedAvatar.includes('/avatars/photo/') || savedAvatar.includes('/avatars/cartoon/'))
 
     profiles[id] = {
       ...profiles[id],
       ...profile,
-      avatarImage: isLegacyDefault
-        ? (seed?.avatarImage ?? '/avatars/isabella.png?v=2')
-        : (savedAvatar ?? seed?.avatarImage ?? '/avatars/isabella.png?v=2'),
+      avatarImage:
+        isCustomUpload || isPhotoOrCartoon
+          ? savedAvatar
+          : (seed?.avatarImage ?? `/avatars/photo/${id}-1.jpg`),
       accent: profile.accent ?? seed?.accent ?? '#0f9b8e',
     }
   }
