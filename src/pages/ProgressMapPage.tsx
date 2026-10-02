@@ -2,7 +2,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
-import { READING_LEVELS } from '@/data/games/reading/levels'
+import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { cn } from '@/lib/cn'
@@ -14,7 +14,7 @@ function AdventurePath({
   onOpen,
 }: {
   title: string
-  levels: typeof READING_LEVELS
+  levels: ReturnType<typeof getAvailableReadingLevels>
   progress: ReturnType<ReturnType<typeof useApp>['getGameProgress']>
   onOpen: (levelId: string) => void
 }) {
@@ -74,7 +74,7 @@ function AdventurePath({
 
 export function ProgressMapPage() {
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress } = useApp()
+  const { activeProfile, getGameProgress, state } = useApp()
 
   if (!activeProfile) return <Navigate to="/" replace />
 
@@ -85,13 +85,13 @@ export function ProgressMapPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <AdventurePath
           title="📚 Aventura de lectura"
-          levels={READING_LEVELS}
+          levels={getAvailableReadingLevels(state.contentBank)}
           progress={getGameProgress('reading')}
           onOpen={() => navigate('/games/aprende-a-leer')}
         />
         <AdventurePath
           title="⌨️ Aventura de teclado"
-          levels={TYPING_LEVELS}
+          levels={TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)}
           progress={getGameProgress('typing')}
           onOpen={() => navigate('/games/teclea-como-una-experta')}
         />

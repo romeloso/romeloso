@@ -1,11 +1,15 @@
 import { PROFILE_SEEDS } from '@/config/profiles'
 import { createInitialGameProgress } from '@/domain/progress'
-import { READING_LEVELS } from '@/data/games/reading/levels'
+import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
-import type { AppState, ChildProfile, GameId, GameProgress } from '@/types'
+import type { AppState, ChildProfile, ContentBank, GameId, GameProgress } from '@/types'
 
 function nowIso() {
   return new Date().toISOString()
+}
+
+export function emptyContentBank(): ContentBank {
+  return { words: [], passages: [] }
 }
 
 export function createProfileFromSeed(seed: (typeof PROFILE_SEEDS)[number]): ChildProfile {
@@ -23,10 +27,15 @@ export function createProfileFromSeed(seed: (typeof PROFILE_SEEDS)[number]): Chi
   }
 }
 
-export function createDefaultProgressForChild(): Record<GameId, GameProgress> {
+export function createDefaultProgressForChild(
+  contentBank: ContentBank = emptyContentBank(),
+): Record<GameId, GameProgress> {
   return {
-    reading: createInitialGameProgress('reading', READING_LEVELS.filter((l) => l.lessonIds.length > 0)),
-    typing: createInitialGameProgress('typing', TYPING_LEVELS.filter((l) => l.lessonIds.length > 0)),
+    reading: createInitialGameProgress('reading', getAvailableReadingLevels(contentBank)),
+    typing: createInitialGameProgress(
+      'typing',
+      TYPING_LEVELS.filter((level) => level.lessonIds.length > 0),
+    ),
     memory: createInitialGameProgress('memory', []),
     math: createInitialGameProgress('math', []),
     science: createInitialGameProgress('science', []),
@@ -45,10 +54,12 @@ export function createInitialAppState(soundEnabled = true): AppState {
   }
 
   return {
-    version: 1,
+    version: 2,
     soundEnabled,
     activeProfileId: null,
+    sessionRole: 'child',
     profiles,
     progress,
+    contentBank: emptyContentBank(),
   }
 }

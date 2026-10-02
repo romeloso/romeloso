@@ -8,23 +8,34 @@ import {
   type ReactNode,
 } from 'react'
 import { APP_CONFIG } from '@/config/app'
+import { ADMIN_CONFIG, PROFILE_SEEDS } from '@/config/profiles'
 import { evaluateAchievements } from '@/data/achievements'
-import { READING_LEVELS } from '@/data/games/reading/levels'
+import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
-import { applyLessonResult } from '@/domain/progress'
+import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
-import { createInitialAppState } from '@/services/profileFactory'
+import {
+  createAdminPassage,
+  createAdminWord,
+} from '@/services/contentService'
+import {
+  createInitialAppState,
+  emptyContentBank,
+} from '@/services/profileFactory'
 import { localAppStore } from '@/services/storage/localStore'
 import { soundService } from '@/services/soundService'
 import type {
   AdaptiveHint,
+  AdminPassageItem,
+  AdminWordItem,
   AppState,
   ChildProfile,
   GameId,
   GameProgress,
   LessonSessionResult,
   RewardPayload,
+  SessionRole,
 } from '@/types'
 
 interface CompleteLessonResponse {
@@ -36,13 +47,31 @@ interface AppContextValue {
   ready: boolean
   state: AppState
   activeProfile: ChildProfile | null
+  isAdmin: boolean
   selectProfile: (profileId: string) => void
   clearActiveProfile: () => void
+  loginAdmin: (pin: string) => boolean
+  logoutAdmin: () => void
   toggleSound: () => void
-  getGameProgress: (gameId: GameId) => GameProgress | null
+  getGameProgress: (gameId: GameId, profileId?: string) => GameProgress | null
   completeLesson: (result: LessonSessionResult) => CompleteLessonResponse | null
   resetAllProgress: () => void
   playSound: (name: 'correct' | 'wrong' | 'reward' | 'levelup') => void
+  addWordMaterial: (input: {
+    word: string
+    image?: string
+    clue?: string
+    distractors: string[]
+  }) => AdminWordItem
+  addPassageMaterial: (input: {
+    title: string
+    text: string
+    question: string
+    options: string[]
+    answer: string
+  }) => AdminPassageItem
+  removeWordMaterial: (id: string) => void
+  removePassageMaterial: (id: string) => void
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -51,18 +80,42 @@ function migrateState(raw: AppState | null): AppState {
   const base = createInitialAppState(APP_CONFIG.defaultSoundEnabled)
   if (!raw) return base
 
+  const profiles = { ...base.profiles }
+  for (const [id, profile] of Object.entries(raw.profiles ?? {})) {
+    const seed = PROFILE_SEEDS.find((item) => item.id === id)
+    profiles[id] = {
+      ...profiles[id],
+      ...profile,
+      avatarImage: profile.avatarImage ?? seed?.avatarImage ?? '/avatars/isabella.png',
+      accent: profile.accent ?? seed?.accent ?? '#0f9b8e',
+    }
+  }
+
+  const contentBank = raw.contentBank ?? emptyContentBank()
+  const readingLevels = getAvailableReadingLevels(contentBank)
+  const typingLevels = TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
+
+  const progressEntries = Object.entries(raw.progress ?? {}).map(([childId, games]) => {
+    const merged = { ...base.progress[childId], ...games } as Record<GameId, GameProgress>
+    if (merged.reading) {
+      merged.reading = syncGameProgressWithLevels(merged.reading, readingLevels)
+    }
+    if (merged.typing) {
+      merged.typing = syncGameProgressWithLevels(merged.typing, typingLevels)
+    }
+    return [childId, merged] as const
+  })
+
   return {
     ...base,
     ...raw,
-    profiles: { ...base.profiles, ...raw.profiles },
+    version: 2,
+    sessionRole: (raw.sessionRole as SessionRole | undefined) ?? 'child',
+    contentBank,
+    profiles,
     progress: {
       ...base.progress,
-      ...Object.fromEntries(
-        Object.entries(raw.progress ?? {}).map(([childId, games]) => [
-          childId,
-          { ...base.progress[childId], ...games },
-        ]),
-      ),
+      ...Object.fromEntries(progressEntries),
     },
   }
 }
@@ -88,12 +141,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return state.profiles[state.activeProfileId] ?? null
   }, [state.activeProfileId, state.profiles])
 
+  const isAdmin = state.sessionRole === 'admin'
+
   const selectProfile = useCallback((profileId: string) => {
-    setState((prev) => ({ ...prev, activeProfileId: profileId }))
+    setState((prev) => ({
+      ...prev,
+      activeProfileId: profileId,
+      sessionRole: 'child',
+    }))
   }, [])
 
   const clearActiveProfile = useCallback(() => {
-    setState((prev) => ({ ...prev, activeProfileId: null }))
+    setState((prev) => ({ ...prev, activeProfileId: null, sessionRole: 'child' }))
+  }, [])
+
+  const loginAdmin = useCallback((pin: string) => {
+    if (pin.trim() !== ADMIN_CONFIG.pin) return false
+    setState((prev) => ({
+      ...prev,
+      sessionRole: 'admin',
+      activeProfileId: null,
+    }))
+    return true
+  }, [])
+
+  const logoutAdmin = useCallback(() => {
+    setState((prev) => ({ ...prev, sessionRole: 'child' }))
   }, [])
 
   const toggleSound = useCallback(() => {
@@ -108,9 +181,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   const getGameProgress = useCallback(
-    (gameId: GameId) => {
-      if (!state.activeProfileId) return null
-      return state.progress[state.activeProfileId]?.[gameId] ?? null
+    (gameId: GameId, profileId?: string) => {
+      const id = profileId ?? state.activeProfileId
+      if (!id) return null
+      return state.progress[id]?.[gameId] ?? null
     },
     [state.activeProfileId, state.progress],
   )
@@ -124,7 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const levels =
         result.gameId === 'reading'
-          ? READING_LEVELS.filter((level) => level.lessonIds.length > 0)
+          ? getAvailableReadingLevels(state.contentBank)
           : result.gameId === 'typing'
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
             : []
@@ -179,39 +253,139 @@ export function AppProvider({ children }: { children: ReactNode }) {
         adaptive: evaluateAdaptiveDifficulty(nextRecent),
       }
     },
-    [recentResults, state.activeProfileId, state.profiles, state.progress, state.soundEnabled],
+    [
+      recentResults,
+      state.activeProfileId,
+      state.contentBank,
+      state.profiles,
+      state.progress,
+      state.soundEnabled,
+    ],
   )
 
   const resetAllProgress = useCallback(() => {
     const fresh = createInitialAppState(state.soundEnabled)
-    setState(fresh)
+    setState({
+      ...fresh,
+      contentBank: state.contentBank,
+    })
     setRecentResults([])
-  }, [state.soundEnabled])
+  }, [state.contentBank, state.soundEnabled])
+
+  const addWordMaterial = useCallback(
+    (input: { word: string; image?: string; clue?: string; distractors: string[] }) => {
+      const item = createAdminWord(input)
+      setState((prev) => {
+        const contentBank = {
+          ...prev.contentBank,
+          words: [item, ...prev.contentBank.words],
+        }
+        const readingLevels = getAvailableReadingLevels(contentBank)
+        const progress = Object.fromEntries(
+          Object.entries(prev.progress).map(([childId, games]) => [
+            childId,
+            {
+              ...games,
+              reading: syncGameProgressWithLevels(games.reading, readingLevels),
+            },
+          ]),
+        )
+        return { ...prev, contentBank, progress }
+      })
+      return item
+    },
+    [],
+  )
+
+  const addPassageMaterial = useCallback(
+    (input: {
+      title: string
+      text: string
+      question: string
+      options: string[]
+      answer: string
+    }) => {
+      const item = createAdminPassage(input)
+      setState((prev) => {
+        const contentBank = {
+          ...prev.contentBank,
+          passages: [item, ...prev.contentBank.passages],
+        }
+        const readingLevels = getAvailableReadingLevels(contentBank)
+        const progress = Object.fromEntries(
+          Object.entries(prev.progress).map(([childId, games]) => [
+            childId,
+            {
+              ...games,
+              reading: syncGameProgressWithLevels(games.reading, readingLevels),
+            },
+          ]),
+        )
+        return { ...prev, contentBank, progress }
+      })
+      return item
+    },
+    [],
+  )
+
+  const removeWordMaterial = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      contentBank: {
+        ...prev.contentBank,
+        words: prev.contentBank.words.filter((item) => item.id !== id),
+      },
+    }))
+  }, [])
+
+  const removePassageMaterial = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      contentBank: {
+        ...prev.contentBank,
+        passages: prev.contentBank.passages.filter((item) => item.id !== id),
+      },
+    }))
+  }, [])
 
   const value = useMemo<AppContextValue>(
     () => ({
       ready,
       state,
       activeProfile,
+      isAdmin,
       selectProfile,
       clearActiveProfile,
+      loginAdmin,
+      logoutAdmin,
       toggleSound,
       getGameProgress,
       completeLesson,
       resetAllProgress,
       playSound,
+      addWordMaterial,
+      addPassageMaterial,
+      removeWordMaterial,
+      removePassageMaterial,
     }),
     [
       ready,
       state,
       activeProfile,
+      isAdmin,
       selectProfile,
       clearActiveProfile,
+      loginAdmin,
+      logoutAdmin,
       toggleSound,
       getGameProgress,
       completeLesson,
       resetAllProgress,
       playSound,
+      addWordMaterial,
+      addPassageMaterial,
+      removeWordMaterial,
+      removePassageMaterial,
     ],
   )
 

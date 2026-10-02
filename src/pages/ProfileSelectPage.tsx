@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { ProfileCard } from '@/components/profile/ProfileCard'
+import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { APP_CONFIG } from '@/config/app'
 import { useApp } from '@/context/AppContext'
@@ -40,6 +41,12 @@ export function ProfileSelectPage() {
             }}
           />
         ))}
+      </div>
+
+      <div className="mt-10 flex justify-center">
+        <Button variant="secondary" onClick={() => navigate('/admin')}>
+          Acceso Administrador
+        </Button>
       </div>
     </PageShell>
   )

@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { cn } from '@/lib/cn'
 import type {
   Activity,
   ActivityAttemptResult,
   LetterChoiceActivity,
   LetterFromImageActivity,
+  ReadingPracticeActivity,
   SyllableBuildActivity,
   WordBuildActivity,
+  WordQuizActivity,
   WordSelectActivity,
 } from '@/types'
 
@@ -250,6 +253,168 @@ function WordBuildView({
   )
 }
 
+function WordQuizView({
+  activity,
+  onResolved,
+}: {
+  activity: WordQuizActivity
+  onResolved: Resolve
+}) {
+  const started = useMemo(() => Date.now(), [activity.id])
+  const [picked, setPicked] = useState<string | null>(null)
+
+  useEffect(() => {
+    setPicked(null)
+  }, [activity.id])
+
+  return (
+    <div className="space-y-6 text-center">
+      <p className="text-lg font-bold text-ink-soft">{activity.prompt}</p>
+      {activity.image ? <p className="text-7xl">{activity.image}</p> : null}
+      <p className="rounded-2xl bg-sand px-4 py-3 text-base font-bold text-ink">{activity.clue}</p>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {activity.options.map((option) => {
+          const isPicked = picked === option.value
+          const isCorrect = option.value === activity.answer
+          return (
+            <Button
+              key={option.id}
+              variant="sunny"
+              size="xl"
+              className={cn(
+                'w-full font-display text-2xl',
+                isPicked && isCorrect && '!bg-success !text-white',
+                isPicked && !isCorrect && '!bg-coral !text-white',
+              )}
+              onClick={() => {
+                setPicked(option.value)
+                window.setTimeout(() => {
+                  onResolved({
+                    correct: option.value === activity.answer,
+                    timeMs: Date.now() - started,
+                  })
+                  if (option.value !== activity.answer) {
+                    setPicked(null)
+                  }
+                }, 350)
+              }}
+            >
+              {option.label}
+            </Button>
+          )
+        })}
+      </div>
+      {picked && picked !== activity.answer ? (
+        <p className="font-bold text-coral">Casi... mira bien y vuelve a intentar</p>
+      ) : null}
+    </div>
+  )
+}
+
+function ReadingPracticeView({
+  activity,
+  onResolved,
+}: {
+  activity: ReadingPracticeActivity
+  onResolved: Resolve
+}) {
+  const started = useMemo(() => Date.now(), [activity.id])
+  const [value, setValue] = useState('')
+  const answer = activity.answer.toUpperCase()
+
+  useEffect(() => {
+    setValue('')
+  }, [activity.id])
+
+  if (activity.mode === 'choose') {
+    return (
+      <div className="space-y-6 text-center">
+        <p className="text-lg font-bold text-ink-soft">{activity.prompt}</p>
+        <div className="whitespace-pre-line rounded-[1.75rem] bg-sand px-5 py-6 font-display text-3xl font-bold leading-snug text-ink sm:text-4xl">
+          {activity.text}
+        </div>
+        {activity.hint ? <p className="text-sm font-semibold text-ink-soft">{activity.hint}</p> : null}
+        <ChoiceGrid
+          options={activity.options ?? []}
+          onPick={(picked) =>
+            onResolved({
+              correct: picked === activity.answer,
+              timeMs: Date.now() - started,
+            })
+          }
+        />
+      </div>
+    )
+  }
+
+  const normalized = value.toUpperCase()
+  const feedback = answer.split('').map((char, index) => {
+    const typed = normalized[index]
+    if (!typed) return 'pending'
+    return typed === char ? 'ok' : 'bad'
+  })
+
+  return (
+    <div className="space-y-6 text-center">
+      <p className="text-lg font-bold text-ink-soft">{activity.prompt}</p>
+      <div className="whitespace-pre-line rounded-[1.75rem] bg-teal/10 px-5 py-6 font-display text-4xl font-bold tracking-wide text-teal sm:text-5xl">
+        {activity.text}
+      </div>
+      {activity.hint ? <p className="text-sm font-semibold text-ink-soft">Pista: {activity.hint}</p> : null}
+
+      <label className="block text-left">
+        <span className="mb-2 block text-sm font-bold text-ink-soft">Tu respuesta</span>
+        <input
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          className="w-full rounded-2xl border-2 border-ink/10 bg-white px-4 py-4 font-display text-2xl font-bold tracking-wide text-ink outline-none focus:border-teal"
+          placeholder="Escribe aquí..."
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+        />
+      </label>
+
+      <div className="flex flex-wrap justify-center gap-1 font-display text-2xl font-bold" aria-live="polite">
+        {answer.split('').map((char, index) => (
+          <span
+            key={`${char}-${index}`}
+            className={cn(
+              'min-w-6 rounded-md px-1',
+              feedback[index] === 'ok' && 'bg-mint text-teal-dark',
+              feedback[index] === 'bad' && 'bg-coral/20 text-coral',
+              feedback[index] === 'pending' && 'bg-sand text-ink-soft',
+            )}
+          >
+            {normalized[index] ?? '·'}
+          </span>
+        ))}
+      </div>
+
+      {normalized.length > 0 && normalized !== answer ? (
+        <p className="font-bold text-coral">Corrección al instante: revisa las letras en rojo</p>
+      ) : null}
+      {normalized === answer ? (
+        <p className="font-bold text-teal">¡Perfecto! Así se escribe</p>
+      ) : null}
+
+      <Button
+        onClick={() =>
+          onResolved({
+            correct: normalized === answer,
+            timeMs: Date.now() - started,
+            typedChars: normalized.length,
+            correctChars: feedback.filter((item) => item === 'ok').length,
+          })
+        }
+        disabled={normalized.length === 0}
+      >
+        Comprobar
+      </Button>
+    </div>
+  )
+}
+
 export function ReadingActivityView({
   activity,
   onResolved,
@@ -268,6 +433,10 @@ export function ReadingActivityView({
       return <WordSelectView activity={activity} onResolved={onResolved} />
     case 'word_build':
       return <WordBuildView key={activity.id} activity={activity} onResolved={onResolved} />
+    case 'word_quiz':
+      return <WordQuizView key={activity.id} activity={activity} onResolved={onResolved} />
+    case 'reading_practice':
+      return <ReadingPracticeView key={activity.id} activity={activity} onResolved={onResolved} />
     default:
       return <p>Esta actividad aún no está disponible.</p>
   }

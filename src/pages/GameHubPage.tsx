@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
 import { getGameBySlug } from '@/data/games/registry'
-import { READING_LEVELS, getReadingLesson } from '@/data/games/reading/levels'
+import { getAvailableReadingLevels, getReadingLesson } from '@/data/games/reading/levels'
 import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { cn } from '@/lib/cn'
@@ -13,7 +13,7 @@ import type { GameLevelMeta } from '@/types'
 export function GameHubPage() {
   const { gameSlug } = useParams()
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress } = useApp()
+  const { activeProfile, getGameProgress, state } = useApp()
 
   if (!activeProfile) return <Navigate to="/" replace />
 
@@ -47,9 +47,9 @@ export function GameHubPage() {
 
   const levels: GameLevelMeta[] =
     game.id === 'reading'
-      ? READING_LEVELS
+      ? getAvailableReadingLevels(state.contentBank)
       : game.id === 'typing'
-        ? TYPING_LEVELS
+        ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
         : []
   const progress = getGameProgress(game.id)
 
@@ -67,8 +67,7 @@ export function GameHubPage() {
       <div className="space-y-4">
         {levels.map((level) => {
           const levelProgress = progress ? getLevelProgress(progress, level) : null
-          const comingSoon = level.lessonIds.length === 0
-          const unlocked = Boolean(levelProgress?.unlocked) && !comingSoon
+          const unlocked = Boolean(levelProgress?.unlocked)
 
           return (
             <article
@@ -84,7 +83,7 @@ export function GameHubPage() {
                     {level.icon} Nivel {level.order}: {level.title}
                   </h2>
                   <p className="font-semibold text-ink-soft">{level.subtitle}</p>
-                  {levelProgress && !comingSoon ? (
+                  {levelProgress ? (
                     <p className="mt-2 text-sm font-bold text-teal">
                       {levelProgress.completedLessons}/{levelProgress.totalLessons} lecciones ·{' '}
                       {levelProgress.stars} estrellas
@@ -92,38 +91,36 @@ export function GameHubPage() {
                   ) : null}
                 </div>
                 <span className="rounded-xl bg-sand px-3 py-1 text-sm font-bold">
-                  {comingSoon ? 'Próximamente' : unlocked ? 'Disponible' : 'Bloqueado'}
+                  {unlocked ? 'Disponible' : 'Bloqueado'}
                 </span>
               </div>
 
-              {!comingSoon ? (
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                  {level.lessonIds.map((lessonId) => {
-                    const lesson =
-                      game.id === 'reading'
-                        ? getReadingLesson(lessonId)
-                        : getTypingLesson(lessonId)
-                    const lessonProgress = progress?.lessonProgress[lessonId]
-                    const lessonUnlocked = Boolean(lessonProgress?.unlocked) && unlocked
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {level.lessonIds.map((lessonId) => {
+                  const lesson =
+                    game.id === 'reading'
+                      ? getReadingLesson(lessonId, state.contentBank)
+                      : getTypingLesson(lessonId)
+                  const lessonProgress = progress?.lessonProgress[lessonId]
+                  const lessonUnlocked = Boolean(lessonProgress?.unlocked) && unlocked
+                  const fromAdmin = lesson?.source === 'admin'
 
-                    return (
-                      <Button
-                        key={lessonId}
-                        variant={lessonUnlocked ? 'primary' : 'secondary'}
-                        disabled={!lessonUnlocked}
-                        onClick={() =>
-                          navigate(`/games/${game.slug}/lesson/${lessonId}`)
-                        }
-                      >
-                        {lesson?.title ?? lessonId}
-                        {lessonProgress && lessonProgress.stars > 0
-                          ? ` · ${'⭐'.repeat(lessonProgress.stars)}`
-                          : ''}
-                      </Button>
-                    )
-                  })}
-                </div>
-              ) : null}
+                  return (
+                    <Button
+                      key={lessonId}
+                      variant={lessonUnlocked ? 'primary' : 'secondary'}
+                      disabled={!lessonUnlocked}
+                      onClick={() => navigate(`/games/${game.slug}/lesson/${lessonId}`)}
+                    >
+                      {fromAdmin ? '✨ ' : ''}
+                      {lesson?.title ?? lessonId}
+                      {lessonProgress && lessonProgress.stars > 0
+                        ? ` · ${'⭐'.repeat(lessonProgress.stars)}`
+                        : ''}
+                    </Button>
+                  )
+                })}
+              </div>
             </article>
           )
         })}

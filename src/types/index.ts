@@ -9,12 +9,16 @@ export type GameId =
   | 'english'
   | 'creativity'
 
+export type SessionRole = 'child' | 'admin'
+
 export type ActivityKind =
   | 'letter_choice'
   | 'letter_from_image'
   | 'syllable_build'
   | 'word_select'
   | 'word_build'
+  | 'word_quiz'
+  | 'reading_practice'
   | 'key_press'
   | 'home_row'
   | 'letter_race'
@@ -25,6 +29,7 @@ export interface ChildProfileSeed {
   id: string
   name: string
   avatar: string
+  avatarImage: string
   accent: string
 }
 
@@ -113,6 +118,25 @@ export interface WordBuildActivity extends BaseActivity {
   scrambled: string[]
 }
 
+/** Quiz: identificar la palabra correcta a partir de imagen o definición. */
+export interface WordQuizActivity extends BaseActivity {
+  kind: 'word_quiz'
+  image?: string
+  clue: string
+  options: ChoiceOption[]
+  answer: string
+}
+
+/** Práctica de lectura con corrección instantánea al escribir/seleccionar. */
+export interface ReadingPracticeActivity extends BaseActivity {
+  kind: 'reading_practice'
+  text: string
+  mode: 'type' | 'choose'
+  options?: ChoiceOption[]
+  answer: string
+  hint?: string
+}
+
 export interface KeyPressActivity extends BaseActivity {
   kind: 'key_press'
   key: string
@@ -147,6 +171,8 @@ export type Activity =
   | SyllableBuildActivity
   | WordSelectActivity
   | WordBuildActivity
+  | WordQuizActivity
+  | ReadingPracticeActivity
   | KeyPressActivity
   | HomeRowActivity
   | LetterRaceActivity
@@ -159,6 +185,7 @@ export interface LessonDefinition {
   levelId: string
   title: string
   activities: Activity[]
+  source?: 'builtin' | 'admin'
 }
 
 export interface LessonProgress {
@@ -241,12 +268,39 @@ export interface LessonSessionResult {
   words?: string[]
 }
 
+/** Material creado desde el panel administrador. */
+export interface AdminWordItem {
+  id: string
+  word: string
+  image?: string
+  clue?: string
+  distractors: string[]
+  createdAt: string
+}
+
+export interface AdminPassageItem {
+  id: string
+  title: string
+  text: string
+  question: string
+  options: string[]
+  answer: string
+  createdAt: string
+}
+
+export interface ContentBank {
+  words: AdminWordItem[]
+  passages: AdminPassageItem[]
+}
+
 export interface AppState {
   version: number
   soundEnabled: boolean
   activeProfileId: string | null
+  sessionRole: SessionRole
   profiles: Record<string, ChildProfile>
   progress: Record<string, Record<GameId, GameProgress>>
+  contentBank: ContentBank
 }
 
 export interface AdaptiveHint {

@@ -1,6 +1,7 @@
 import { Navigate, useNavigate } from 'react-router-dom'
 import { GameCard } from '@/components/game/GameCard'
 import { TopBar } from '@/components/layout/TopBar'
+import { Avatar } from '@/components/profile/Avatar'
 import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
@@ -36,12 +37,12 @@ export function DashboardPage() {
 
       <section className="mb-8 rounded-[2rem] bg-white/80 p-5 shadow-[0_12px_30px_rgba(31,42,55,0.08)] sm:p-8">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div
-            className="grid h-28 w-28 shrink-0 place-items-center rounded-full text-6xl ring-4 ring-white"
-            style={{ backgroundColor: `${activeProfile.accent}33` }}
-          >
-            {activeProfile.avatar}
-          </div>
+          <Avatar
+            name={activeProfile.name}
+            src={activeProfile.avatarImage}
+            accent={activeProfile.accent}
+            size="lg"
+          />
           <div className="flex-1 space-y-3">
             <h1 className="font-display text-4xl font-bold text-ink">
               ¡Hola, {activeProfile.name}!

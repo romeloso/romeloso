@@ -6,12 +6,13 @@ Plataforma educativa infantil para Isabella, Sophia y Valentina.
 
 ## Qué incluye (MVP)
 
-- Selección de perfiles infantiles (extensible)
+- Perfiles con avatares ilustrados (progreso aislado)
 - Dashboard con XP, monedas, racha y progreso
-- Juego **Aprende a leer** (niveles 1–5)
-- Juego **Teclea como una experta** (niveles 1–5)
+- **Aprende a leer** niveles 1–8: letras, sílabas, palabras, **quiz**, **práctica con corrección instantánea** e historias
+- **Teclea como una experta** niveles 1–5
+- Panel **Administrador** (PIN `2468`): ver progreso de cada niña e ingresar material
 - Recompensas, logros, mapa de aventura y resultados celebratorios
-- Arquitectura modular lista para más juegos (mate, inglés, ciencias…)
+- Arquitectura modular lista para más juegos
 - Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
 
 El nombre de la app se cambia en `src/config/app.ts`.
@@ -33,7 +34,15 @@ npm run dev
 ```bash
 npm run build
 npm run preview
+npm run smoke
 ```
+
+## Administrador
+
+1. En la pantalla de perfiles, toca **Acceso Administrador**
+2. PIN: `2468`
+3. Pestaña **Progreso**: Isabella / Sophia / Valentina
+4. Pestaña **Material**: palabras/quizzes e historias que se integran al juego de lectura
 
 ## Cómo agregar un juego nuevo
 
@@ -43,30 +52,18 @@ npm run preview
 4. Conecta el módulo en `LessonPage` / registro de juegos
 5. Reutiliza XP, logros, progreso y `LessonRunner`
 
-No hace falta reescribir el dashboard ni el sistema de recompensas.
-
 ## Arquitectura
 
 ```
 src/
-  config/          # nombre de app, perfiles semilla, reglas de recompensa
+  config/          # nombre de app, perfiles, PIN admin
   types/           # modelo de dominio
   data/            # contenido educativo y catálogo de juegos
   domain/          # progreso, XP, dificultad adaptativa
-  services/        # storage, sonidos, factories
-  context/         # estado global de perfiles/progreso
+  services/        # storage, sonidos, content bank
+  context/         # estado global (perfiles, rol, material)
   components/      # UI reutilizable y shell de juego
   games/           # módulos por juego
-  pages/           # pantallas de navegación
+  pages/           # pantallas (incluye /admin)
   supabase/        # cliente + SQL/RLS preparado
 ```
-
-## Perfiles
-
-Semilla inicial en `src/config/profiles.ts`:
-
-- Isabella
-- Sophia
-- Valentina
-
-El progreso de cada niña está aislado.

@@ -60,6 +60,50 @@ export function createInitialGameProgress(
   }
 }
 
+/** Asegura que lecciones nuevas (builtin o admin) existan en el progreso. */
+export function syncGameProgressWithLevels(
+  progress: GameProgress,
+  levels: GameLevelMeta[],
+): GameProgress {
+  const lessonProgress = { ...progress.lessonProgress }
+  const unlockedLevelIds = new Set(progress.unlockedLevelIds)
+  const firstLevel = levels[0]
+
+  for (const level of levels) {
+    level.lessonIds.forEach((lessonId, index) => {
+      if (!lessonProgress[lessonId]) {
+        lessonProgress[lessonId] = {
+          lessonId,
+          stars: 0,
+          bestAccuracy: 0,
+          completions: 0,
+          lastPlayedAt: null,
+          unlocked:
+            unlockedLevelIds.has(level.id) ||
+            (level.id === firstLevel?.id && index === 0),
+        }
+      }
+    })
+  }
+
+  if (unlockedLevelIds.size === 0 && firstLevel) {
+    unlockedLevelIds.add(firstLevel.id)
+    const firstLessonId = firstLevel.lessonIds[0]
+    if (firstLessonId && lessonProgress[firstLessonId]) {
+      lessonProgress[firstLessonId] = {
+        ...lessonProgress[firstLessonId],
+        unlocked: true,
+      }
+    }
+  }
+
+  return {
+    ...progress,
+    unlockedLevelIds: [...unlockedLevelIds],
+    lessonProgress,
+  }
+}
+
 export function getLevelProgress(
   progress: GameProgress,
   level: GameLevelMeta,
