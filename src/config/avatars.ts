@@ -26,3 +26,18 @@ export const AVATAR_OPTIONS: Record<
 export function defaultAvatarFor(profileId: string): string {
   return AVATAR_OPTIONS[profileId]?.[0]?.src ?? `/avatars/photo/${profileId}-1.jpg`
 }
+
+/** Semilla inicial de la galería central (fotos + caricaturas). */
+export function seedAvatarLibraryItems(): { label: string; src: string }[] {
+  const items: { label: string; src: string }[] = []
+  for (const [profileId, options] of Object.entries(AVATAR_OPTIONS)) {
+    const name = profileId.charAt(0).toUpperCase() + profileId.slice(1)
+    for (const option of options) {
+      items.push({
+        label: `${name} · ${option.label}`,
+        src: option.src,
+      })
+    }
+  }
+  return items
+}

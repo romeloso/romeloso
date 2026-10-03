@@ -31,9 +31,11 @@ export interface ChildProfileSeed {
   avatar: string
   avatarImage: string
   accent: string
+  birthDate?: string | null
 }
 
 export interface ChildProfile extends ChildProfileSeed {
+  birthDate: string | null
   level: number
   xp: number
   points: number
@@ -275,6 +277,8 @@ export interface AdminWordItem {
   image?: string
   clue?: string
   distractors: string[]
+  minAge: number
+  maxAge: number
   createdAt: string
 }
 
@@ -285,12 +289,36 @@ export interface AdminPassageItem {
   question: string
   options: string[]
   answer: string
+  minAge: number
+  maxAge: number
+  createdAt: string
+}
+
+/** Temas de estudio/refuerzo por materia, adaptables por edad. */
+export interface StudyTopic {
+  id: string
+  subjectId: GameId
+  title: string
+  description: string
+  minAge: number
+  maxAge: number
+  reinforce: boolean
+  createdAt: string
+}
+
+/** Galería central de fotos/avatares administrable. */
+export interface AvatarLibraryItem {
+  id: string
+  label: string
+  src: string
   createdAt: string
 }
 
 export interface ContentBank {
   words: AdminWordItem[]
   passages: AdminPassageItem[]
+  topics: StudyTopic[]
+  avatarLibrary: AvatarLibraryItem[]
 }
 
 export interface AppState {

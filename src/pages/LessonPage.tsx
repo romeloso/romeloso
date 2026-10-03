@@ -9,6 +9,7 @@ import { getReadingLesson } from '@/data/games/reading/levels'
 import { getTypingLesson } from '@/data/games/typing/levels'
 import { ReadingActivityView } from '@/games/reading/ReadingActivities'
 import { TypingActivityView } from '@/games/typing/TypingActivities'
+import { ageFromBirthDate } from '@/lib/age'
 import type {
   ActivityAttemptResult,
   LessonSessionResult,
@@ -44,12 +45,13 @@ export function LessonPage() {
   } | null>(null)
 
   const game = gameSlug ? getGameBySlug(gameSlug) : undefined
+  const age = ageFromBirthDate(activeProfile?.birthDate)
   const lesson = useMemo(() => {
     if (!lessonId || !game) return undefined
-    if (game.id === 'reading') return getReadingLesson(lessonId, state.contentBank)
+    if (game.id === 'reading') return getReadingLesson(lessonId, state.contentBank, age)
     if (game.id === 'typing') return getTypingLesson(lessonId)
     return undefined
-  }, [game, lessonId, state.contentBank])
+  }, [age, game, lessonId, state.contentBank])
 
   if (!activeProfile) return <Navigate to="/" replace />
   if (!game || !lesson) {

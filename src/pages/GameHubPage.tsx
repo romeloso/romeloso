@@ -7,7 +7,9 @@ import { getGameBySlug } from '@/data/games/registry'
 import { getAvailableReadingLevels, getReadingLesson } from '@/data/games/reading/levels'
 import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
 import { getLevelProgress } from '@/domain/progress'
+import { ageFromBirthDate, formatAge } from '@/lib/age'
 import { cn } from '@/lib/cn'
+import { topicsForAge } from '@/services/contentService'
 import type { GameLevelMeta } from '@/types'
 
 export function GameHubPage() {
@@ -27,6 +29,9 @@ export function GameHubPage() {
     )
   }
 
+  const age = ageFromBirthDate(activeProfile.birthDate)
+  const subjectTopics = topicsForAge(state.contentBank.topics, age, game.id)
+
   if (game.status !== 'available') {
     return (
       <PageShell>
@@ -37,6 +42,18 @@ export function GameHubPage() {
           <p className="mt-3 text-lg font-semibold text-ink-soft">
             Este juego llegará pronto. ¡Mientras tanto practica lectura y tecleo!
           </p>
+          {subjectTopics.length > 0 ? (
+            <div className="mx-auto mt-6 max-w-lg rounded-2xl bg-sand/70 p-4 text-left">
+              <p className="font-bold text-ink">Temas para reforzar ({formatAge(age)})</p>
+              <ul className="mt-2 space-y-2">
+                {subjectTopics.map((topic) => (
+                  <li key={topic.id} className="text-sm font-semibold text-ink-soft">
+                    {topic.title}: {topic.description}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <Button className="mt-6" onClick={() => navigate('/dashboard')}>
             Volver al dashboard
           </Button>
@@ -47,7 +64,7 @@ export function GameHubPage() {
 
   const levels: GameLevelMeta[] =
     game.id === 'reading'
-      ? getAvailableReadingLevels(state.contentBank)
+      ? getAvailableReadingLevels(state.contentBank, age)
       : game.id === 'typing'
         ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
         : []
@@ -62,7 +79,27 @@ export function GameHubPage() {
         </p>
         <h1 className="mt-2 font-display text-4xl font-bold">{game.title}</h1>
         <p className="mt-2 text-lg font-semibold text-white/90">{game.description}</p>
+        <p className="mt-2 text-sm font-bold text-white/80">
+          Nivel adaptado a {formatAge(age)}
+        </p>
       </section>
+
+      {subjectTopics.length > 0 ? (
+        <section className="mb-5 rounded-[1.75rem] bg-white/85 p-5 ring-1 ring-ink/5">
+          <h2 className="font-display text-xl font-bold">Temas de esta materia</h2>
+          <ul className="mt-3 space-y-2">
+            {subjectTopics.map((topic) => (
+              <li key={topic.id} className="rounded-xl bg-sand/60 px-3 py-2">
+                <p className="font-bold">
+                  {topic.title}
+                  {topic.reinforce ? ' · Refuerzo' : ''}
+                </p>
+                <p className="text-sm font-semibold text-ink-soft">{topic.description}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <div className="space-y-4">
         {levels.map((level) => {
@@ -99,7 +136,7 @@ export function GameHubPage() {
                 {level.lessonIds.map((lessonId) => {
                   const lesson =
                     game.id === 'reading'
-                      ? getReadingLesson(lessonId, state.contentBank)
+                      ? getReadingLesson(lessonId, state.contentBank, age)
                       : getTypingLesson(lessonId)
                   const lessonProgress = progress?.lessonProgress[lessonId]
                   const lessonUnlocked = Boolean(lessonProgress?.unlocked) && unlocked

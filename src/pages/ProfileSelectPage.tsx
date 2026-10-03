@@ -30,7 +30,7 @@ export function ProfileSelectPage() {
           Elige tu perfil para guardar tu aventura, tus estrellas y tus monedas.
         </p>
       </section>
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {profiles.map((profile) => (
           <ProfileCard
             key={profile.id}

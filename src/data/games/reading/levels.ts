@@ -82,8 +82,11 @@ export function getBuiltinReadingLessons(): LessonDefinition[] {
   return [...READING_LESSONS, ...READING_QUIZ_AND_PRACTICE_LESSONS]
 }
 
-export function getReadingLessons(bank?: ContentBank): LessonDefinition[] {
-  const adminLessons = bank ? buildAdminReadingLessons(bank) : []
+export function getReadingLessons(
+  bank?: ContentBank,
+  age: number | null = null,
+): LessonDefinition[] {
+  const adminLessons = bank ? buildAdminReadingLessons(bank, age) : []
   const adminIds = new Set(adminLessons.map((lesson) => lesson.id))
   const builtin = getBuiltinReadingLessons().filter((lesson) => !adminIds.has(lesson.id))
   return [...builtin, ...adminLessons]
@@ -92,13 +95,17 @@ export function getReadingLessons(bank?: ContentBank): LessonDefinition[] {
 export function getReadingLesson(
   lessonId: string,
   bank?: ContentBank,
+  age: number | null = null,
 ): LessonDefinition | undefined {
-  return getReadingLessons(bank).find((lesson) => lesson.id === lessonId)
+  return getReadingLessons(bank, age).find((lesson) => lesson.id === lessonId)
 }
 
-/** Niveles con lecciones realmente disponibles según el bank. */
-export function getAvailableReadingLevels(bank?: ContentBank): GameLevelMeta[] {
-  const lessons = getReadingLessons(bank)
+/** Niveles con lecciones realmente disponibles según el bank y la edad. */
+export function getAvailableReadingLevels(
+  bank?: ContentBank,
+  age: number | null = null,
+): GameLevelMeta[] {
+  const lessons = getReadingLessons(bank, age)
   const availableIds = new Set(lessons.map((lesson) => lesson.id))
 
   return READING_LEVELS.map((level) => ({

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { GameCard } from '@/components/game/GameCard'
 import { TopBar } from '@/components/layout/TopBar'
@@ -12,14 +12,25 @@ import { useApp } from '@/context/AppContext'
 import { GAME_DEFINITIONS } from '@/data/games/registry'
 import { ACHIEVEMENTS } from '@/data/achievements'
 import { overallGameCompletion } from '@/domain/progress'
+import { ageBandFromAge, ageBandLabel, ageFromBirthDate, formatAge } from '@/lib/age'
 import { formatNumber } from '@/lib/format'
 import { xpProgressWithinLevel } from '@/lib/xp'
+import { topicsForAge } from '@/services/contentService'
 import type { ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress, state, updateProfileAvatar } = useApp()
+  const { activeProfile, getGameProgress, state, updateProfileAvatar, updateChildProfile } =
+    useApp()
   const [editingAvatar, setEditingAvatar] = useState(false)
+  const [editingBirthDate, setEditingBirthDate] = useState(false)
+
+  const age = ageFromBirthDate(activeProfile?.birthDate)
+  const band = ageBandFromAge(age)
+  const myTopics = useMemo(
+    () => topicsForAge(state.contentBank.topics, age),
+    [age, state.contentBank.topics],
+  )
 
   if (!activeProfile) {
     return <Navigate to="/" replace />
@@ -61,20 +72,57 @@ export function DashboardPage() {
             <h1 className="font-display text-4xl font-bold text-ink">
               ¡Hola, {activeProfile.name}!
             </h1>
-            <p className="text-lg font-bold text-ink-soft">Nivel {activeProfile.level}</p>
+            <p className="text-lg font-bold text-ink-soft">
+              Nivel {activeProfile.level} · {formatAge(age)} · {ageBandLabel(band)}
+            </p>
             <ProgressBar
               value={xpInfo.ratio}
               label={`${formatNumber(xpInfo.current)} / ${formatNumber(xpInfo.needed)} XP`}
               colorClassName="bg-coral"
             />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="md"
+                variant="secondary"
+                className="!min-h-10"
+                onClick={() => setEditingBirthDate((value) => !value)}
+              >
+                {editingBirthDate ? 'Cerrar fecha' : 'Mi fecha de nacimiento'}
+              </Button>
+              {!activeProfile.birthDate ? (
+                <span className="text-sm font-bold text-coral">
+                  Pon tu fecha para adaptar los temas a tu edad
+                </span>
+              ) : null}
+            </div>
           </div>
         </div>
+
+        {editingBirthDate ? (
+          <div className="mt-5 rounded-[1.5rem] bg-sand/60 p-4 sm:p-5">
+            <h2 className="mb-3 font-display text-xl font-bold">Fecha de nacimiento</h2>
+            <p className="mb-3 text-sm font-semibold text-ink-soft">
+              Con tu edad te mostramos temas y material a tu nivel.
+            </p>
+            <input
+              type="date"
+              className="w-full max-w-xs rounded-xl border-2 border-ink/10 px-3 py-2 font-bold"
+              value={activeProfile.birthDate ?? ''}
+              onChange={(e) =>
+                updateChildProfile(activeProfile.id, {
+                  birthDate: e.target.value || null,
+                })
+              }
+            />
+          </div>
+        ) : null}
 
         {editingAvatar ? (
           <div className="mt-5 rounded-[1.5rem] bg-sand/60 p-4 text-center sm:p-5">
             <h2 className="mb-3 font-display text-xl font-bold">Actualizar foto de perfil</h2>
             <AvatarUploader
               profile={activeProfile}
+              library={state.contentBank.avatarLibrary}
               compact
               onSave={(avatarImage) => {
                 updateProfileAvatar(activeProfile.id, avatarImage)
@@ -91,6 +139,32 @@ export function DashboardPage() {
           <StatPill icon="🏆" label="Logros" value={ownedAchievements.length} />
         </div>
       </section>
+
+      {myTopics.length > 0 ? (
+        <section className="mb-8 rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">
+          <h2 className="font-display text-2xl font-bold">Temas para ti</h2>
+          <p className="mt-1 font-semibold text-ink-soft">
+            Adaptados a tu edad ({formatAge(age)})
+          </p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+            {myTopics.map((topic) => {
+              const game = GAME_DEFINITIONS.find((item) => item.id === topic.subjectId)
+              return (
+                <li key={topic.id} className="rounded-2xl bg-sand/50 px-4 py-3">
+                  <p className="font-bold">
+                    {game?.icon} {topic.title}
+                    {topic.reinforce ? ' · Refuerzo' : ''}
+                  </p>
+                  <p className="text-sm font-semibold text-ink-soft">{topic.description}</p>
+                  <p className="mt-1 text-xs font-bold text-teal">
+                    {game?.shortTitle ?? topic.subjectId}
+                  </p>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="mb-8 grid gap-4 md:grid-cols-2">
         <div className="rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">

@@ -5,6 +5,7 @@ import { useApp } from '@/context/AppContext'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getLevelProgress } from '@/domain/progress'
+import { ageFromBirthDate } from '@/lib/age'
 import { cn } from '@/lib/cn'
 
 function AdventurePath({
@@ -78,6 +79,8 @@ export function ProgressMapPage() {
 
   if (!activeProfile) return <Navigate to="/" replace />
 
+  const age = ageFromBirthDate(activeProfile.birthDate)
+
   return (
     <PageShell wide>
       <TopBar backTo="/dashboard" backLabel="Dashboard" showBackToProfiles />
@@ -85,7 +88,7 @@ export function ProgressMapPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <AdventurePath
           title="📚 Aventura de lectura"
-          levels={getAvailableReadingLevels(state.contentBank)}
+          levels={getAvailableReadingLevels(state.contentBank, age)}
           progress={getGameProgress('reading')}
           onOpen={() => navigate('/games/aprende-a-leer')}
         />

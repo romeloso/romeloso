@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import { APP_CONFIG } from '@/config/app'
+import { seedAvatarLibraryItems } from '@/config/avatars'
 import { ADMIN_CONFIG, PROFILE_SEEDS } from '@/config/profiles'
 import { evaluateAchievements } from '@/data/achievements'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
@@ -15,11 +16,16 @@ import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
+import { ageFromBirthDate } from '@/lib/age'
 import {
   createAdminPassage,
   createAdminWord,
+  createAvatarLibraryItem,
+  createStudyTopic,
 } from '@/services/contentService'
 import {
+  createChildProfile,
+  createDefaultProgressForChild,
   createInitialAppState,
   emptyContentBank,
 } from '@/services/profileFactory'
@@ -30,12 +36,14 @@ import type {
   AdminPassageItem,
   AdminWordItem,
   AppState,
+  AvatarLibraryItem,
   ChildProfile,
   GameId,
   GameProgress,
   LessonSessionResult,
   RewardPayload,
   SessionRole,
+  StudyTopic,
 } from '@/types'
 
 interface CompleteLessonResponse {
@@ -57,11 +65,24 @@ interface AppContextValue {
   completeLesson: (result: LessonSessionResult) => CompleteLessonResponse | null
   resetAllProgress: () => void
   playSound: (name: 'correct' | 'wrong' | 'reward' | 'levelup') => void
+  addChildProfile: (input: {
+    name: string
+    birthDate?: string | null
+    avatarImage?: string
+    accent?: string
+  }) => ChildProfile
+  updateChildProfile: (
+    profileId: string,
+    patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'avatarImage' | 'accent'>>,
+  ) => void
+  removeChildProfile: (profileId: string) => void
   addWordMaterial: (input: {
     word: string
     image?: string
     clue?: string
     distractors: string[]
+    minAge?: number
+    maxAge?: number
   }) => AdminWordItem
   addPassageMaterial: (input: {
     title: string
@@ -69,9 +90,22 @@ interface AppContextValue {
     question: string
     options: string[]
     answer: string
+    minAge?: number
+    maxAge?: number
   }) => AdminPassageItem
   removeWordMaterial: (id: string) => void
   removePassageMaterial: (id: string) => void
+  addStudyTopic: (input: {
+    subjectId: GameId
+    title: string
+    description: string
+    minAge?: number
+    maxAge?: number
+    reinforce?: boolean
+  }) => StudyTopic
+  removeStudyTopic: (id: string) => void
+  addAvatarToLibrary: (input: { label: string; src: string }) => AvatarLibraryItem
+  removeAvatarFromLibrary: (id: string) => void
   updateProfileAvatar: (profileId: string, avatarImage: string) => void
 }
 
@@ -88,11 +122,14 @@ function migrateState(raw: AppState | null): AppState {
     const isCustomUpload = typeof savedAvatar === 'string' && savedAvatar.startsWith('data:')
     const isPhotoOrCartoon =
       typeof savedAvatar === 'string' &&
-      (savedAvatar.includes('/avatars/photo/') || savedAvatar.includes('/avatars/cartoon/'))
+      (savedAvatar.includes('/avatars/photo/') ||
+        savedAvatar.includes('/avatars/cartoon/') ||
+        savedAvatar.startsWith('data:'))
 
     profiles[id] = {
-      ...profiles[id],
+      ...(profiles[id] ?? createChildProfile({ name: profile.name || id })),
       ...profile,
+      birthDate: profile.birthDate ?? seed?.birthDate ?? null,
       avatarImage:
         isCustomUpload || isPhotoOrCartoon
           ? savedAvatar
@@ -101,12 +138,35 @@ function migrateState(raw: AppState | null): AppState {
     }
   }
 
-  const contentBank = raw.contentBank ?? emptyContentBank()
+  const existingLibrary = raw.contentBank?.avatarLibrary ?? []
+  const avatarLibrary =
+    existingLibrary.length > 0
+      ? existingLibrary
+      : seedAvatarLibraryItems().map((item) => createAvatarLibraryItem(item))
+
+  const contentBank = {
+    ...emptyContentBank(),
+    ...raw.contentBank,
+    words: (raw.contentBank?.words ?? []).map((item) => ({
+      ...item,
+      minAge: item.minAge ?? 3,
+      maxAge: item.maxAge ?? 12,
+    })),
+    passages: (raw.contentBank?.passages ?? []).map((item) => ({
+      ...item,
+      minAge: item.minAge ?? 3,
+      maxAge: item.maxAge ?? 12,
+    })),
+    topics: raw.contentBank?.topics ?? [],
+    avatarLibrary,
+  }
+
   const readingLevels = getAvailableReadingLevels(contentBank)
   const typingLevels = TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
 
   const progressEntries = Object.entries(raw.progress ?? {}).map(([childId, games]) => {
-    const merged = { ...base.progress[childId], ...games } as Record<GameId, GameProgress>
+    const defaults = createDefaultProgressForChild(contentBank)
+    const merged = { ...defaults, ...games } as Record<GameId, GameProgress>
     if (merged.reading) {
       merged.reading = syncGameProgressWithLevels(merged.reading, readingLevels)
     }
@@ -119,7 +179,7 @@ function migrateState(raw: AppState | null): AppState {
   return {
     ...base,
     ...raw,
-    version: 2,
+    version: 3,
     sessionRole: (raw.sessionRole as SessionRole | undefined) ?? 'child',
     contentBank,
     profiles,
@@ -128,6 +188,19 @@ function migrateState(raw: AppState | null): AppState {
       ...Object.fromEntries(progressEntries),
     },
   }
+}
+
+function syncReadingProgress(prev: AppState, contentBank: AppState['contentBank']): AppState['progress'] {
+  const readingLevels = getAvailableReadingLevels(contentBank)
+  return Object.fromEntries(
+    Object.entries(prev.progress).map(([childId, games]) => [
+      childId,
+      {
+        ...games,
+        reading: syncGameProgressWithLevels(games.reading, readingLevels),
+      },
+    ]),
+  )
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
@@ -206,20 +279,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const childProgress = state.progress[state.activeProfileId]
       if (!profile || !childProgress) return null
 
+      const age = ageFromBirthDate(profile.birthDate)
       const levels =
         result.gameId === 'reading'
-          ? getAvailableReadingLevels(state.contentBank)
+          ? getAvailableReadingLevels(state.contentBank, age)
           : result.gameId === 'typing'
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
             : []
 
       const currentGameProgress = childProgress[result.gameId]
-      const nextGameProgress = applyLessonResult(
-        currentGameProgress,
-        levels,
-        [],
-        result,
-      )
+      const nextGameProgress = applyLessonResult(currentGameProgress, levels, [], result)
 
       const achievements = evaluateAchievements({
         profile,
@@ -228,11 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         result,
       })
 
-      const { profile: nextProfile, reward } = computeLessonRewards(
-        profile,
-        result,
-        achievements,
-      )
+      const { profile: nextProfile, reward } = computeLessonRewards(profile, result, achievements)
 
       setState((prev) => ({
         ...prev,
@@ -278,29 +343,107 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setState({
       ...fresh,
       contentBank: state.contentBank,
+      profiles: Object.fromEntries(
+        Object.values(state.profiles).map((profile) => [
+          profile.id,
+          {
+            ...profile,
+            level: 1,
+            xp: 0,
+            points: 0,
+            coins: 0,
+            streakDays: 0,
+            lastPlayedDate: null,
+            achievements: [],
+            updatedAt: new Date().toISOString(),
+          },
+        ]),
+      ),
+      progress: Object.fromEntries(
+        Object.keys(state.profiles).map((id) => [id, createDefaultProgressForChild(state.contentBank)]),
+      ),
     })
     setRecentResults([])
-  }, [state.contentBank, state.soundEnabled])
+  }, [state.contentBank, state.profiles, state.soundEnabled])
+
+  const addChildProfile = useCallback(
+    (input: {
+      name: string
+      birthDate?: string | null
+      avatarImage?: string
+      accent?: string
+    }) => {
+      const profile = createChildProfile(input)
+      setState((prev) => ({
+        ...prev,
+        profiles: { ...prev.profiles, [profile.id]: profile },
+        progress: {
+          ...prev.progress,
+          [profile.id]: createDefaultProgressForChild(prev.contentBank),
+        },
+      }))
+      return profile
+    },
+    [],
+  )
+
+  const updateChildProfile = useCallback(
+    (
+      profileId: string,
+      patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'avatarImage' | 'accent'>>,
+    ) => {
+      setState((prev) => {
+        const profile = prev.profiles[profileId]
+        if (!profile) return prev
+        return {
+          ...prev,
+          profiles: {
+            ...prev.profiles,
+            [profileId]: {
+              ...profile,
+              ...patch,
+              name: patch.name?.trim() || profile.name,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        }
+      })
+    },
+    [],
+  )
+
+  const removeChildProfile = useCallback((profileId: string) => {
+    setState((prev) => {
+      const profiles = { ...prev.profiles }
+      const progress = { ...prev.progress }
+      delete profiles[profileId]
+      delete progress[profileId]
+      return {
+        ...prev,
+        profiles,
+        progress,
+        activeProfileId:
+          prev.activeProfileId === profileId ? null : prev.activeProfileId,
+      }
+    })
+  }, [])
 
   const addWordMaterial = useCallback(
-    (input: { word: string; image?: string; clue?: string; distractors: string[] }) => {
+    (input: {
+      word: string
+      image?: string
+      clue?: string
+      distractors: string[]
+      minAge?: number
+      maxAge?: number
+    }) => {
       const item = createAdminWord(input)
       setState((prev) => {
         const contentBank = {
           ...prev.contentBank,
           words: [item, ...prev.contentBank.words],
         }
-        const readingLevels = getAvailableReadingLevels(contentBank)
-        const progress = Object.fromEntries(
-          Object.entries(prev.progress).map(([childId, games]) => [
-            childId,
-            {
-              ...games,
-              reading: syncGameProgressWithLevels(games.reading, readingLevels),
-            },
-          ]),
-        )
-        return { ...prev, contentBank, progress }
+        return { ...prev, contentBank, progress: syncReadingProgress(prev, contentBank) }
       })
       return item
     },
@@ -314,6 +457,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       question: string
       options: string[]
       answer: string
+      minAge?: number
+      maxAge?: number
     }) => {
       const item = createAdminPassage(input)
       setState((prev) => {
@@ -321,17 +466,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...prev.contentBank,
           passages: [item, ...prev.contentBank.passages],
         }
-        const readingLevels = getAvailableReadingLevels(contentBank)
-        const progress = Object.fromEntries(
-          Object.entries(prev.progress).map(([childId, games]) => [
-            childId,
-            {
-              ...games,
-              reading: syncGameProgressWithLevels(games.reading, readingLevels),
-            },
-          ]),
-        )
-        return { ...prev, contentBank, progress }
+        return { ...prev, contentBank, progress: syncReadingProgress(prev, contentBank) }
       })
       return item
     },
@@ -354,6 +489,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
       contentBank: {
         ...prev.contentBank,
         passages: prev.contentBank.passages.filter((item) => item.id !== id),
+      },
+    }))
+  }, [])
+
+  const addStudyTopic = useCallback(
+    (input: {
+      subjectId: GameId
+      title: string
+      description: string
+      minAge?: number
+      maxAge?: number
+      reinforce?: boolean
+    }) => {
+      const item = createStudyTopic(input)
+      setState((prev) => ({
+        ...prev,
+        contentBank: {
+          ...prev.contentBank,
+          topics: [item, ...prev.contentBank.topics],
+        },
+      }))
+      return item
+    },
+    [],
+  )
+
+  const removeStudyTopic = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      contentBank: {
+        ...prev.contentBank,
+        topics: prev.contentBank.topics.filter((item) => item.id !== id),
+      },
+    }))
+  }, [])
+
+  const addAvatarToLibrary = useCallback((input: { label: string; src: string }) => {
+    const item = createAvatarLibraryItem(input)
+    setState((prev) => ({
+      ...prev,
+      contentBank: {
+        ...prev.contentBank,
+        avatarLibrary: [item, ...prev.contentBank.avatarLibrary],
+      },
+    }))
+    return item
+  }, [])
+
+  const removeAvatarFromLibrary = useCallback((id: string) => {
+    setState((prev) => ({
+      ...prev,
+      contentBank: {
+        ...prev.contentBank,
+        avatarLibrary: prev.contentBank.avatarLibrary.filter((item) => item.id !== id),
       },
     }))
   }, [])
@@ -391,10 +580,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       completeLesson,
       resetAllProgress,
       playSound,
+      addChildProfile,
+      updateChildProfile,
+      removeChildProfile,
       addWordMaterial,
       addPassageMaterial,
       removeWordMaterial,
       removePassageMaterial,
+      addStudyTopic,
+      removeStudyTopic,
+      addAvatarToLibrary,
+      removeAvatarFromLibrary,
       updateProfileAvatar,
     }),
     [
@@ -411,10 +607,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
       completeLesson,
       resetAllProgress,
       playSound,
+      addChildProfile,
+      updateChildProfile,
+      removeChildProfile,
       addWordMaterial,
       addPassageMaterial,
       removeWordMaterial,
       removePassageMaterial,
+      addStudyTopic,
+      removeStudyTopic,
+      addAvatarToLibrary,
+      removeAvatarFromLibrary,
       updateProfileAvatar,
     ],
   )

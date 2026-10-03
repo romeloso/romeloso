@@ -1,11 +1,15 @@
+import { topicFitsAge } from '@/lib/age'
 import type {
   AdminPassageItem,
   AdminWordItem,
+  AvatarLibraryItem,
   ChoiceOption,
   ContentBank,
+  GameId,
   LessonDefinition,
-  WordQuizActivity,
   ReadingPracticeActivity,
+  StudyTopic,
+  WordQuizActivity,
 } from '@/types'
 
 const choice = (value: string): ChoiceOption => ({
@@ -23,12 +27,27 @@ function shuffle<T>(items: T[]): T[] {
   return copy
 }
 
-/** Convierte material del admin en lecciones jugables de lectura. */
-export function buildAdminReadingLessons(bank: ContentBank): LessonDefinition[] {
+function normalizeBank(bank: ContentBank): ContentBank {
+  return {
+    words: bank.words ?? [],
+    passages: bank.passages ?? [],
+    topics: bank.topics ?? [],
+    avatarLibrary: bank.avatarLibrary ?? [],
+  }
+}
+
+/** Convierte material del admin en lecciones jugables de lectura, filtradas por edad. */
+export function buildAdminReadingLessons(
+  bank: ContentBank,
+  age: number | null = null,
+): LessonDefinition[] {
+  const normalized = normalizeBank(bank)
+  const words = normalized.words.filter((item) => topicFitsAge(item, age))
+  const passages = normalized.passages.filter((item) => topicFitsAge(item, age))
   const lessons: LessonDefinition[] = []
 
-  if (bank.words.length > 0) {
-    const quizActivities: WordQuizActivity[] = bank.words.slice(0, 12).map((word, index) => {
+  if (words.length > 0) {
+    const quizActivities: WordQuizActivity[] = words.slice(0, 12).map((word, index) => {
       const options = shuffle([
         choice(word.word.toUpperCase()),
         ...word.distractors.slice(0, 2).map((item) => choice(item.toUpperCase())),
@@ -47,7 +66,7 @@ export function buildAdminReadingLessons(bank: ContentBank): LessonDefinition[] 
       }
     })
 
-    const practiceActivities: ReadingPracticeActivity[] = bank.words.slice(0, 8).map((word, index) => ({
+    const practiceActivities: ReadingPracticeActivity[] = words.slice(0, 8).map((word, index) => ({
       id: `admin-practice-${word.id}-${index}`,
       kind: 'reading_practice',
       prompt: 'Lee y escribe la palabra',
@@ -80,8 +99,8 @@ export function buildAdminReadingLessons(bank: ContentBank): LessonDefinition[] 
     }
   }
 
-  if (bank.passages.length > 0) {
-    const passageActivities = bank.passages.flatMap((passage) => {
+  if (passages.length > 0) {
+    const passageActivities = passages.flatMap((passage) => {
       const read: ReadingPracticeActivity = {
         id: `admin-pass-read-${passage.id}`,
         kind: 'reading_practice',
@@ -121,6 +140,8 @@ export function createAdminWord(input: {
   image?: string
   clue?: string
   distractors: string[]
+  minAge?: number
+  maxAge?: number
 }): AdminWordItem {
   return {
     id: `word-${crypto.randomUUID()}`,
@@ -128,6 +149,8 @@ export function createAdminWord(input: {
     image: input.image?.trim() || undefined,
     clue: input.clue?.trim() || undefined,
     distractors: input.distractors.map((item) => item.trim()).filter(Boolean),
+    minAge: input.minAge ?? 3,
+    maxAge: input.maxAge ?? 12,
     createdAt: new Date().toISOString(),
   }
 }
@@ -138,6 +161,8 @@ export function createAdminPassage(input: {
   question: string
   options: string[]
   answer: string
+  minAge?: number
+  maxAge?: number
 }): AdminPassageItem {
   return {
     id: `pass-${crypto.randomUUID()}`,
@@ -146,6 +171,47 @@ export function createAdminPassage(input: {
     question: input.question.trim(),
     options: input.options.map((item) => item.trim()).filter(Boolean),
     answer: input.answer.trim(),
+    minAge: input.minAge ?? 3,
+    maxAge: input.maxAge ?? 12,
     createdAt: new Date().toISOString(),
   }
+}
+
+export function createStudyTopic(input: {
+  subjectId: GameId
+  title: string
+  description: string
+  minAge?: number
+  maxAge?: number
+  reinforce?: boolean
+}): StudyTopic {
+  return {
+    id: `topic-${crypto.randomUUID()}`,
+    subjectId: input.subjectId,
+    title: input.title.trim(),
+    description: input.description.trim(),
+    minAge: input.minAge ?? 3,
+    maxAge: input.maxAge ?? 12,
+    reinforce: Boolean(input.reinforce),
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function createAvatarLibraryItem(input: {
+  label: string
+  src: string
+}): AvatarLibraryItem {
+  return {
+    id: `avatar-${crypto.randomUUID()}`,
+    label: input.label.trim() || 'Foto',
+    src: input.src,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function topicsForAge(topics: StudyTopic[], age: number | null, subjectId?: GameId) {
+  return topics.filter(
+    (topic) =>
+      topicFitsAge(topic, age) && (subjectId ? topic.subjectId === subjectId : true),
+  )
 }

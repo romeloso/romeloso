@@ -6,11 +6,13 @@ Plataforma educativa infantil para Isabella, Sophia y Valentina.
 
 ## Qué incluye (MVP)
 
-- Perfiles con avatares ilustrados (progreso aislado)
-- Dashboard con XP, monedas, racha y progreso
+- Perfiles dinámicos con fecha de nacimiento y edad
+- Avatares centralizados (galería + fotos subidas)
+- Dashboard con XP, monedas, racha, temas adaptados por edad
 - **Aprende a leer** niveles 1–8: letras, sílabas, palabras, **quiz**, **práctica con corrección instantánea** e historias
 - **Teclea como una experta** niveles 1–5
-- Panel **Administrador** (PIN `2468`): ver progreso de cada niña e ingresar material
+- Panel **Administrador** (PIN `2468`): niños, temas por materia, galería de avatares, progreso y material
+- Temas de estudio/refuerzo filtrados por edad de cada niño
 - Recompensas, logros, mapa de aventura y resultados celebratorios
 - Arquitectura modular lista para más juegos
 - Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
@@ -41,8 +43,11 @@ npm run smoke
 
 1. En la pantalla de perfiles, toca **Acceso Administrador**
 2. PIN: `2468`
-3. Pestaña **Progreso**: Isabella / Sophia / Valentina
-4. Pestaña **Material**: palabras/quizzes e historias que se integran al juego de lectura
+3. Pestaña **Niños**: agregar perfiles, fechas de nacimiento y fotos
+4. Pestaña **Temas**: temas por materia con rango de edad
+5. Pestaña **Avatares**: galería central de fotos/avatares
+6. Pestaña **Progreso**: avance de cada niño
+7. Pestaña **Material**: palabras/quizzes e historias (también con edad)
 
 ## Cómo agregar un juego nuevo
 
