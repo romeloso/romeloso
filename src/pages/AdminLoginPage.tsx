@@ -20,7 +20,7 @@ export function AdminLoginPage() {
       <section className="mx-auto max-w-md rounded-[2rem] bg-white/90 p-6 shadow-[0_12px_30px_rgba(31,42,55,0.08)] sm:p-8">
         <h1 className="font-display text-3xl font-bold text-ink">Rol {ADMIN_CONFIG.roleLabel}</h1>
         <p className="mt-2 font-semibold text-ink-soft">
-          Ingresa el PIN para ver el progreso de Isabella, Sophia y Valentina, y cargar material nuevo.
+          Ingresa el PIN para gestionar niños, edades, temas de estudio, avatares y material.
         </p>
 
         <label className="mt-6 block">
