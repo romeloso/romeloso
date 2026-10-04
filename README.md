@@ -1,22 +1,79 @@
-# Romel Estevez
+# Sorova Games
 
-Software engineer. Construyo, depuro e itero en código con foco en claridad, flujos reales y resultado usable.
+Plataforma educativa infantil (**Sorova Games**).
 
-## Enfoque
+**Aprender es una aventura.**
 
-- Trabajar directo en el código: crear, depurar e iterar
-- Diseñar y completar flujos de extremo a extremo entre apps y sistemas
-- Preferir soluciones simples, mantenibles y fáciles de revisar
+## Qué incluye (MVP)
 
-## Ahora
+- Identidad visual Sorova + intro animado en el lobby
+- **Sopa de letras** con tablero navy y resaltados de marca
+- Perfiles dinámicos con fecha de nacimiento y edad
+- Avatares centralizados (galería + fotos subidas)
+- Dashboard con XP, monedas, racha, temas adaptados por edad
+- **Aprende a leer** niveles 1–8: letras, sílabas, palabras, quiz, práctica e historias
+- **Teclea como una experta**
+- Panel **Administrador** (PIN `2468`): niños, temas, avatares, progreso y material
+- Recompensas, logros y mapa de aventura
+- Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
 
-Estoy dando forma a este espacio en GitHub — perfil, experimentos y trabajo público en progreso.
+El nombre de la app se cambia en `src/config/app.ts`.
 
-## Contacto
+## Stack
 
-- GitHub: [@romeloso](https://github.com/romeloso)
-- Email: [romelestevez@gmail.com](mailto:romelestevez@gmail.com)
+- React + TypeScript (Vite)
+- Tailwind CSS
+- React Router
+- Supabase (preparado; el MVP usa `localStorage`)
 
----
+## Desarrollo
 
-*Disponible para colaborar en proyectos de software con impacto concreto.*
+```bash
+npm install
+npm run dev
+```
+
+```bash
+npm run build
+npm run preview
+npm run smoke
+npm test              # unit + componentes + integración
+npm run test:e2e      # Playwright E2E
+npm run load-test     # carga cliente + umbral de lentitud
+```
+
+Rendimiento, caché, índices y rate limiting: ver `docs/PERFORMANCE.md`.
+
+## Administrador
+
+1. En la pantalla de perfiles, toca **Acceso Administrador**
+2. PIN: `2468`
+3. Pestaña **Niños**: agregar perfiles, fechas de nacimiento y fotos
+4. Pestaña **Temas**: temas por materia con rango de edad
+5. Pestaña **Avatares**: galería central de fotos/avatares
+6. Pestaña **Progreso**: avance de cada niño
+7. Pestaña **Material**: palabras/quizzes e historias (también con edad)
+
+## Cómo agregar un juego nuevo
+
+1. Añade la definición en `src/data/games/registry.ts`
+2. Crea `src/data/games/<juego>/` con niveles y contenido
+3. Implementa el módulo UI en `src/games/<juego>/`
+4. Conecta el módulo en `LessonPage` / registro de juegos
+5. Reutiliza XP, logros, progreso y `LessonRunner`
+
+## Arquitectura
+
+```
+src/
+  config/          # nombre de app, perfiles, PIN admin
+  types/           # modelo de dominio
+  data/            # contenido educativo y catálogo de juegos
+  domain/          # progreso, XP, dificultad adaptativa
+  services/        # storage, sonidos, content bank
+  context/         # estado global (perfiles, rol, material)
+  components/      # UI reutilizable y shell de juego
+  games/           # módulos por juego
+  pages/           # pantallas (incluye /admin)
+  supabase/        # cliente + SQL/RLS preparado
+```
