@@ -1,7 +1,7 @@
 import type { ContentBank, GameLevelMeta, LessonDefinition } from '@/types'
 import { READING_LESSONS } from './content'
 import { READING_QUIZ_AND_PRACTICE_LESSONS } from './quizContent'
-import { buildAdminReadingLessons } from '@/services/contentService'
+import { getCachedAdminReadingLessons } from '@/services/cache/contentCache'
 
 export const READING_LEVELS: GameLevelMeta[] = [
   {
@@ -86,7 +86,7 @@ export function getReadingLessons(
   bank?: ContentBank,
   age: number | null = null,
 ): LessonDefinition[] {
-  const adminLessons = bank ? buildAdminReadingLessons(bank, age) : []
+  const adminLessons = bank ? getCachedAdminReadingLessons(bank, age) : []
   const adminIds = new Set(adminLessons.map((lesson) => lesson.id))
   const builtin = getBuiltinReadingLessons().filter((lesson) => !adminIds.has(lesson.id))
   return [...builtin, ...adminLessons]

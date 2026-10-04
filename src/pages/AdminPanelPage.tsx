@@ -232,16 +232,20 @@ export function AdminPanelPage() {
               <Button
                 onClick={() => {
                   if (!childName.trim()) return
-                  addChildProfile({
-                    name: childName,
-                    birthDate: childBirthDate || null,
-                    accent: childAccent,
-                    avatarImage: childAvatarSrc || undefined,
-                  })
-                  setChildName('')
-                  setChildBirthDate('')
-                  setChildAvatarSrc('')
-                  flash('Niño o niña agregado. Ya aparece en la selección de perfiles.')
+                  try {
+                    addChildProfile({
+                      name: childName,
+                      birthDate: childBirthDate || null,
+                      accent: childAccent,
+                      avatarImage: childAvatarSrc || undefined,
+                    })
+                    setChildName('')
+                    setChildBirthDate('')
+                    setChildAvatarSrc('')
+                    flash('Niño o niña agregado. Ya aparece en la selección de perfiles.')
+                  } catch (error) {
+                    flash(error instanceof Error ? error.message : 'No se pudo agregar el perfil')
+                  }
                 }}
               >
                 Guardar perfil
@@ -378,17 +382,21 @@ export function AdminPanelPage() {
               <Button
                 onClick={() => {
                   if (!topicTitle.trim()) return
-                  addStudyTopic({
-                    subjectId: topicSubject,
-                    title: topicTitle,
-                    description: topicDescription,
-                    minAge: topicMinAge,
-                    maxAge: topicMaxAge,
-                    reinforce: topicReinforce,
-                  })
-                  setTopicTitle('')
-                  setTopicDescription('')
-                  flash('Tema agregado. Se adaptará a la edad de cada niño.')
+                  try {
+                    addStudyTopic({
+                      subjectId: topicSubject,
+                      title: topicTitle,
+                      description: topicDescription,
+                      minAge: topicMinAge,
+                      maxAge: topicMaxAge,
+                      reinforce: topicReinforce,
+                    })
+                    setTopicTitle('')
+                    setTopicDescription('')
+                    flash('Tema agregado. Se adaptará a la edad de cada niño.')
+                  } catch (error) {
+                    flash(error instanceof Error ? error.message : 'No se pudo guardar el tema')
+                  }
                 }}
               >
                 Guardar tema
@@ -662,17 +670,21 @@ export function AdminPanelPage() {
               <Button
                 onClick={() => {
                   if (!word.trim()) return
-                  addWordMaterial({
-                    word,
-                    clue,
-                    image,
-                    distractors: distractors.split(',').map((item) => item.trim()),
-                    minAge: wordMinAge,
-                    maxAge: wordMaxAge,
-                  })
-                  setWord('')
-                  setClue('')
-                  flash('Palabra agregada. Ya está disponible en el juego de lectura.')
+                  try {
+                    addWordMaterial({
+                      word,
+                      clue,
+                      image,
+                      distractors: distractors.split(',').map((item) => item.trim()),
+                      minAge: wordMinAge,
+                      maxAge: wordMaxAge,
+                    })
+                    setWord('')
+                    setClue('')
+                    flash('Palabra agregada. Ya está disponible en el juego de lectura.')
+                  } catch (error) {
+                    flash(error instanceof Error ? error.message : 'No se pudo guardar la palabra')
+                  }
                 }}
               >
                 Guardar palabra
@@ -744,19 +756,23 @@ export function AdminPanelPage() {
               <Button
                 onClick={() => {
                   if (!title.trim() || !text.trim() || !question.trim() || !answer.trim()) return
-                  addPassageMaterial({
-                    title,
-                    text,
-                    question,
-                    options: options.split(',').map((item) => item.trim()),
-                    answer,
-                    minAge: passageMinAge,
-                    maxAge: passageMaxAge,
-                  })
-                  setTitle('')
-                  setText('')
-                  setQuestion('')
-                  flash('Historia agregada. Ya aparece en el módulo de Historias.')
+                  try {
+                    addPassageMaterial({
+                      title,
+                      text,
+                      question,
+                      options: options.split(',').map((item) => item.trim()),
+                      answer,
+                      minAge: passageMinAge,
+                      maxAge: passageMaxAge,
+                    })
+                    setTitle('')
+                    setText('')
+                    setQuestion('')
+                    flash('Historia agregada. Ya aparece en el módulo de Historias.')
+                  } catch (error) {
+                    flash(error instanceof Error ? error.message : 'No se pudo guardar la historia')
+                  }
                 }}
               >
                 Guardar historia

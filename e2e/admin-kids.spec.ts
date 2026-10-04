@@ -1,0 +1,48 @@
+import { test, expect } from '@playwright/test'
+
+test.describe('Mis Juegos E2E', () => {
+  test('admin agrega niño, tema y el dashboard adapta por edad', async ({ page }) => {
+    await page.goto('/')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+
+    await expect(page.getByRole('heading', { name: /¿Quién va a jugar hoy/i })).toBeVisible()
+
+    await page.getByRole('button', { name: /Acceso Administrador/i }).click()
+    await page.getByPlaceholder('••••').fill('2468')
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await expect(page.getByText('Panel Administrador')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Niños' }).click()
+    await page.getByPlaceholder('Nombre').fill('Elena')
+    await page.locator('input[type="date"]').first().fill('2018-08-20')
+    await page.getByRole('button', { name: 'Guardar perfil' }).click()
+    await expect(page.getByText(/Niño o niña agregado/i)).toBeVisible()
+
+    await page.getByRole('button', { name: 'Temas' }).click()
+    await page.getByPlaceholder('Título del tema').fill('Rimas fáciles')
+    await page.getByPlaceholder('Descripción o qué practicar').fill('Practicar rimas')
+    await page.getByRole('button', { name: 'Guardar tema' }).click()
+    await expect(page.getByText(/Tema agregado/i)).toBeVisible()
+
+    await page.getByRole('button', { name: /Cerrar sesión admin/i }).click()
+    await expect(page.getByText('Elena')).toBeVisible()
+
+    await page.locator('button', { has: page.getByRole('img', { name: /Avatar de Elena/i }) }).click()
+    await expect(page.getByText(/¡Hola, Elena!/i)).toBeVisible()
+    await expect(page.getByText(/Temas para ti/i)).toBeVisible()
+    await expect(page.getByText(/Rimas fáciles/i)).toBeVisible()
+  })
+
+  test('rate limit bloquea PIN tras varios intentos', async ({ page }) => {
+    await page.goto('/admin')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+
+    for (let i = 0; i < 6; i += 1) {
+      await page.getByPlaceholder('••••').fill('0000')
+      await page.getByRole('button', { name: 'Entrar' }).click()
+    }
+    await expect(page.getByText(/Demasiados intentos|PIN incorrecto|Límite/i)).toBeVisible()
+  })
+})

@@ -44,9 +44,9 @@ export function AdminLoginPage() {
         <div className="mt-6 flex flex-wrap gap-3">
           <Button
             onClick={() => {
-              const ok = loginAdmin(pin)
-              if (!ok) {
-                setError('PIN incorrecto. Inténtalo de nuevo.')
+              const result = loginAdmin(pin)
+              if (!result.ok) {
+                setError(result.error ?? 'PIN incorrecto. Inténtalo de nuevo.')
                 return
               }
               navigate('/admin/panel')

@@ -17,6 +17,8 @@ import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
 import { ageFromBirthDate } from '@/lib/age'
+import { consumeRateLimit } from '@/lib/rateLimit'
+import { invalidateContentCaches } from '@/services/cache/contentCache'
 import {
   createAdminPassage,
   createAdminWord,
@@ -58,7 +60,7 @@ interface AppContextValue {
   isAdmin: boolean
   selectProfile: (profileId: string) => void
   clearActiveProfile: () => void
-  loginAdmin: (pin: string) => boolean
+  loginAdmin: (pin: string) => { ok: boolean; error?: string }
   logoutAdmin: () => void
   toggleSound: () => void
   getGameProgress: (gameId: GameId, profileId?: string) => GameProgress | null
@@ -239,13 +241,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const loginAdmin = useCallback((pin: string) => {
-    if (pin.trim() !== ADMIN_CONFIG.pin) return false
+    const limit = consumeRateLimit('adminPin')
+    if (!limit.allowed) {
+      return {
+        ok: false,
+        error: limit.reason ?? 'Demasiados intentos. Espera un momento.',
+      }
+    }
+    if (pin.trim() !== ADMIN_CONFIG.pin) {
+      return { ok: false, error: 'PIN incorrecto. Inténtalo de nuevo.' }
+    }
     setState((prev) => ({
       ...prev,
       sessionRole: 'admin',
       activeProfileId: null,
     }))
-    return true
+    return { ok: true }
   }, [])
 
   const logoutAdmin = useCallback(() => {
@@ -373,6 +384,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       avatarImage?: string
       accent?: string
     }) => {
+      const limit = consumeRateLimit('addChild')
+      if (!limit.allowed) {
+        throw new Error(limit.reason ?? 'Límite de altas alcanzado')
+      }
       const profile = createChildProfile(input)
       setState((prev) => ({
         ...prev,
@@ -437,6 +452,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       minAge?: number
       maxAge?: number
     }) => {
+      const limit = consumeRateLimit('addContent')
+      if (!limit.allowed) {
+        throw new Error(limit.reason ?? 'Límite de contenido alcanzado')
+      }
       const item = createAdminWord(input)
       setState((prev) => {
         const contentBank = {
@@ -460,6 +479,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       minAge?: number
       maxAge?: number
     }) => {
+      const limit = consumeRateLimit('addContent')
+      if (!limit.allowed) {
+        throw new Error(limit.reason ?? 'Límite de contenido alcanzado')
+      }
       const item = createAdminPassage(input)
       setState((prev) => {
         const contentBank = {
@@ -474,6 +497,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   const removeWordMaterial = useCallback((id: string) => {
+    invalidateContentCaches()
     setState((prev) => ({
       ...prev,
       contentBank: {
@@ -484,6 +508,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const removePassageMaterial = useCallback((id: string) => {
+    invalidateContentCaches()
     setState((prev) => ({
       ...prev,
       contentBank: {
@@ -502,6 +527,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       maxAge?: number
       reinforce?: boolean
     }) => {
+      const limit = consumeRateLimit('addContent')
+      if (!limit.allowed) {
+        throw new Error(limit.reason ?? 'Límite de contenido alcanzado')
+      }
       const item = createStudyTopic(input)
       setState((prev) => ({
         ...prev,
@@ -516,6 +545,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   const removeStudyTopic = useCallback((id: string) => {
+    invalidateContentCaches()
     setState((prev) => ({
       ...prev,
       contentBank: {
@@ -526,6 +556,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const addAvatarToLibrary = useCallback((input: { label: string; src: string }) => {
+    const limit = consumeRateLimit('avatarUpload')
+    if (!limit.allowed) {
+      throw new Error(limit.reason ?? 'Límite de subidas alcanzado')
+    }
     const item = createAvatarLibraryItem(input)
     setState((prev) => ({
       ...prev,
@@ -538,6 +572,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const removeAvatarFromLibrary = useCallback((id: string) => {
+    invalidateContentCaches()
     setState((prev) => ({
       ...prev,
       contentBank: {

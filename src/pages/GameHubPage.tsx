@@ -9,7 +9,7 @@ import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { ageFromBirthDate, formatAge } from '@/lib/age'
 import { cn } from '@/lib/cn'
-import { topicsForAge } from '@/services/contentService'
+import { getCachedTopicsForAge } from '@/services/cache/contentCache'
 import type { GameLevelMeta } from '@/types'
 
 export function GameHubPage() {
@@ -30,7 +30,7 @@ export function GameHubPage() {
   }
 
   const age = ageFromBirthDate(activeProfile.birthDate)
-  const subjectTopics = topicsForAge(state.contentBank.topics, age, game.id)
+  const subjectTopics = getCachedTopicsForAge(state.contentBank.topics, age, game.id)
 
   if (game.status !== 'available') {
     return (

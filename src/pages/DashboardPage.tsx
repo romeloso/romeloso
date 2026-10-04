@@ -15,7 +15,7 @@ import { overallGameCompletion } from '@/domain/progress'
 import { ageBandFromAge, ageBandLabel, ageFromBirthDate, formatAge } from '@/lib/age'
 import { formatNumber } from '@/lib/format'
 import { xpProgressWithinLevel } from '@/lib/xp'
-import { topicsForAge } from '@/services/contentService'
+import { getCachedTopicsForAge } from '@/services/cache/contentCache'
 import type { ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
@@ -28,7 +28,7 @@ export function DashboardPage() {
   const age = ageFromBirthDate(activeProfile?.birthDate)
   const band = ageBandFromAge(age)
   const myTopics = useMemo(
-    () => topicsForAge(state.contentBank.topics, age),
+    () => getCachedTopicsForAge(state.contentBank.topics, age),
     [age, state.contentBank.topics],
   )
 

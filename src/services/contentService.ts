@@ -1,4 +1,5 @@
 import { topicFitsAge } from '@/lib/age'
+import { invalidateContentCaches } from '@/services/cache/contentCache'
 import type {
   AdminPassageItem,
   AdminWordItem,
@@ -143,6 +144,7 @@ export function createAdminWord(input: {
   minAge?: number
   maxAge?: number
 }): AdminWordItem {
+  invalidateContentCaches()
   return {
     id: `word-${crypto.randomUUID()}`,
     word: input.word.trim(),
@@ -164,6 +166,7 @@ export function createAdminPassage(input: {
   minAge?: number
   maxAge?: number
 }): AdminPassageItem {
+  invalidateContentCaches()
   return {
     id: `pass-${crypto.randomUUID()}`,
     title: input.title.trim(),
@@ -185,6 +188,7 @@ export function createStudyTopic(input: {
   maxAge?: number
   reinforce?: boolean
 }): StudyTopic {
+  invalidateContentCaches()
   return {
     id: `topic-${crypto.randomUUID()}`,
     subjectId: input.subjectId,
@@ -201,6 +205,7 @@ export function createAvatarLibraryItem(input: {
   label: string
   src: string
 }): AvatarLibraryItem {
+  invalidateContentCaches()
   return {
     id: `avatar-${crypto.randomUUID()}`,
     label: input.label.trim() || 'Foto',

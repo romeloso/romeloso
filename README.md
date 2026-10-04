@@ -37,7 +37,12 @@ npm run dev
 npm run build
 npm run preview
 npm run smoke
+npm test              # unit + componentes + integración
+npm run test:e2e      # Playwright E2E
+npm run load-test     # carga cliente + umbral de lentitud
 ```
+
+Rendimiento, caché, índices y rate limiting: ver `docs/PERFORMANCE.md`.
 
 ## Administrador
 

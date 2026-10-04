@@ -1,0 +1,152 @@
+{
+  "generatedAt": "2026-10-04T02:49:33.981Z",
+  "environment": "node-client-simulation",
+  "note": "Simula carga de CPU/memoria del cliente. No mide red/Supabase. Para multi-familia usar k6 contra API cuando exista backend.",
+  "thresholds": {
+    "cpuSlowP95Ms": 100,
+    "heavySaveP95Ms": 50,
+    "throughputDropPct": 40
+  },
+  "cpuScenario": {
+    "baselineOpsPerSec": 4837.43,
+    "becomesSlowAroundUsers": null,
+    "slowReason": "No se alcanzó umbral en el rango probado (hasta 400 usuarios)",
+    "results": [
+      {
+        "users": 1,
+        "ops": 20,
+        "elapsedMs": 4.13,
+        "opsPerSec": 4837.43,
+        "p50Ms": 0.132,
+        "p95Ms": 0.504,
+        "p99Ms": 0.735,
+        "maxMs": 0.735
+      },
+      {
+        "users": 5,
+        "ops": 100,
+        "elapsedMs": 9.23,
+        "opsPerSec": 10830.29,
+        "p50Ms": 0.084,
+        "p95Ms": 0.134,
+        "p99Ms": 0.169,
+        "maxMs": 0.172
+      },
+      {
+        "users": 10,
+        "ops": 200,
+        "elapsedMs": 17.86,
+        "opsPerSec": 11195.18,
+        "p50Ms": 0.084,
+        "p95Ms": 0.136,
+        "p99Ms": 0.148,
+        "maxMs": 0.156
+      },
+      {
+        "users": 25,
+        "ops": 500,
+        "elapsedMs": 45.86,
+        "opsPerSec": 10902.72,
+        "p50Ms": 0.082,
+        "p95Ms": 0.144,
+        "p99Ms": 0.178,
+        "maxMs": 0.436
+      },
+      {
+        "users": 50,
+        "ops": 1000,
+        "elapsedMs": 98.74,
+        "opsPerSec": 10127.12,
+        "p50Ms": 0.082,
+        "p95Ms": 0.157,
+        "p99Ms": 0.268,
+        "maxMs": 0.59
+      },
+      {
+        "users": 100,
+        "ops": 2000,
+        "elapsedMs": 170.93,
+        "opsPerSec": 11700.6,
+        "p50Ms": 0.079,
+        "p95Ms": 0.119,
+        "p99Ms": 0.157,
+        "maxMs": 0.266
+      },
+      {
+        "users": 200,
+        "ops": 4000,
+        "elapsedMs": 330.96,
+        "opsPerSec": 12085.89,
+        "p50Ms": 0.078,
+        "p95Ms": 0.106,
+        "p99Ms": 0.142,
+        "maxMs": 0.355
+      },
+      {
+        "users": 400,
+        "ops": 8000,
+        "elapsedMs": 660.41,
+        "opsPerSec": 12113.76,
+        "p50Ms": 0.078,
+        "p95Ms": 0.096,
+        "p99Ms": 0.153,
+        "maxMs": 0.276
+      }
+    ]
+  },
+  "heavyPersistScenario": {
+    "becomesSlowAroundProfiles": 20,
+    "slowReason": "payload ~4691.4KB supera soft-limit 4.5MB de localStorage",
+    "results": [
+      {
+        "profiles": 3,
+        "approxPayloadKB": 703.8,
+        "p50Ms": 2.17,
+        "p95Ms": 2.7,
+        "maxMs": 2.7,
+        "exceedsLocalStorageSoftLimit": false
+      },
+      {
+        "profiles": 6,
+        "approxPayloadKB": 1407.5,
+        "p50Ms": 4.466,
+        "p95Ms": 5.379,
+        "maxMs": 5.379,
+        "exceedsLocalStorageSoftLimit": false
+      },
+      {
+        "profiles": 10,
+        "approxPayloadKB": 2345.7,
+        "p50Ms": 7.877,
+        "p95Ms": 9.156,
+        "maxMs": 9.156,
+        "exceedsLocalStorageSoftLimit": false
+      },
+      {
+        "profiles": 15,
+        "approxPayloadKB": 3518.6,
+        "p50Ms": 10.61,
+        "p95Ms": 12.127,
+        "maxMs": 12.127,
+        "exceedsLocalStorageSoftLimit": false
+      },
+      {
+        "profiles": 20,
+        "approxPayloadKB": 4691.4,
+        "p50Ms": 15.195,
+        "p95Ms": 16.638,
+        "maxMs": 16.638,
+        "exceedsLocalStorageSoftLimit": true
+      },
+      {
+        "profiles": 30,
+        "approxPayloadKB": 7037.1,
+        "p50Ms": 22.272,
+        "p95Ms": 24.724,
+        "maxMs": 24.724,
+        "exceedsLocalStorageSoftLimit": true
+      }
+    ]
+  },
+  "recommendation": "CPU/filtrado: ≥400 usuarios concurrentes simulados sin cruzar p95 100ms. Persistencia: se degrada ~20 perfiles con fotos base64 (payload ~4691.4KB supera soft-limit 4.5MB de localStorage). Mitigar con galería por URL/Supabase Storage y debounce de save. Cuellos reales esperados en producción: localStorage 5–10MB, queries sin índice en Supabase, y rate limits de API."
+}
