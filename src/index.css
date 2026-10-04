@@ -88,32 +88,28 @@
 }
 
 /* Lobby intro + brand motion */
-@keyframes sorova-logo-pop {
+@keyframes sorova-brand-hero {
   0% {
     opacity: 0;
-    transform: scale(0.4) rotate(-8deg);
+    transform: translateY(28px) scale(0.86);
   }
-  60% {
+  55% {
     opacity: 1;
-    transform: scale(1.08) rotate(2deg);
+    transform: translateY(-6px) scale(1.03);
   }
   100% {
     opacity: 1;
-    transform: scale(1) rotate(0deg);
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes sorova-star-fly {
-  0% {
-    opacity: 0;
-    transform: translate(-140%, -80%) rotate(-40deg) scale(0.4);
+@keyframes sorova-brand-float {
+  0%,
+  100% {
+    transform: translateY(0);
   }
   50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 1;
-    transform: translate(0, 0) rotate(12deg) scale(1);
+    transform: translateY(-10px);
   }
 }
 
@@ -125,20 +121,6 @@
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes sorova-confetti {
-  0% {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.4);
-  }
-  30% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.85;
-    transform: translateY(18px) scale(1) rotate(20deg);
   }
 }
 
@@ -162,29 +144,18 @@
   }
 }
 
-@keyframes sorova-shimmer {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 100% 50%;
-  }
+.animate-brand-hero {
+  animation:
+    sorova-brand-hero 1.05s cubic-bezier(0.22, 1.15, 0.36, 1) both,
+    sorova-brand-float 3.4s 1.05s ease-in-out infinite;
 }
 
-.animate-logo-pop {
-  animation: sorova-logo-pop 0.9s cubic-bezier(0.22, 1.2, 0.36, 1) both;
-}
-
-.animate-star-fly {
-  animation: sorova-star-fly 1.1s 0.25s cubic-bezier(0.22, 1.2, 0.36, 1) both;
+.animate-brand-float {
+  animation: sorova-brand-float 3.4s ease-in-out infinite;
 }
 
 .animate-fade-up {
   animation: sorova-fade-up 0.7s ease-out both;
-}
-
-.animate-confetti {
-  animation: sorova-confetti 1.2s ease-out both;
 }
 
 .animate-float {

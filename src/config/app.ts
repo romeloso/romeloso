@@ -8,7 +8,7 @@ export const APP_CONFIG = {
   unlockThreshold: 0.7,
   xpPerLevelBase: 100,
   defaultSoundEnabled: true,
-  brandImage: '/brand-sorova.jpg',
+  brandImage: '/brand-sorova.png',
 } as const
 
 export const BRAND_COLORS = {
