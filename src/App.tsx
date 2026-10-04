@@ -9,6 +9,7 @@ import { LessonPage } from '@/pages/LessonPage'
 import { ProfileSelectPage } from '@/pages/ProfileSelectPage'
 import { ProgressMapPage } from '@/pages/ProgressMapPage'
 import { ResultPage } from '@/pages/ResultPage'
+import { WordSearchPage } from '@/pages/WordSearchPage'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/achievements" element={<AchievementsPage />} />
           <Route path="/games/:gameSlug" element={<GameHubPage />} />
           <Route path="/games/:gameSlug/lesson/:lessonId" element={<LessonPage />} />
+          <Route path="/games/sopa-de-letras/play/:puzzleId" element={<WordSearchPage />} />
           <Route path="/result" element={<ResultPage />} />
           <Route path="/admin" element={<AdminLoginPage />} />
           <Route path="/admin/panel" element={<AdminPanelPage />} />

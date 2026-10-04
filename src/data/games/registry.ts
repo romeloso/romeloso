@@ -1,6 +1,18 @@
 import type { GameDefinition } from '@/types'
+import { BRAND_COLORS } from '@/config/app'
 
 export const GAME_DEFINITIONS: GameDefinition[] = [
+  {
+    id: 'wordsearch',
+    slug: 'sopa-de-letras',
+    title: 'Sopa de letras',
+    shortTitle: 'Sopa',
+    description: 'Encuentra palabras escondidas con la magia Sorova.',
+    icon: '🔤',
+    status: 'available',
+    accent: BRAND_COLORS.violet,
+    totalLevels: 4,
+  },
   {
     id: 'reading',
     slug: 'aprende-a-leer',
@@ -9,7 +21,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Letras, sílabas, palabras e historias divertidas.',
     icon: '📚',
     status: 'available',
-    accent: '#ff6b6b',
+    accent: BRAND_COLORS.pink,
     totalLevels: 8,
   },
   {
@@ -20,7 +32,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Aprende el teclado, gana precisión y velocidad.',
     icon: '⌨️',
     status: 'available',
-    accent: '#0f9b8e',
+    accent: BRAND_COLORS.indigo,
     totalLevels: 8,
   },
   {
@@ -31,7 +43,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Entrena tu memoria con retos divertidos.',
     icon: '🧠',
     status: 'coming_soon',
-    accent: '#b8a1ff',
+    accent: BRAND_COLORS.violet,
     totalLevels: 0,
   },
   {
@@ -42,7 +54,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Números, sumas y juegos de cálculo.',
     icon: '🔢',
     status: 'coming_soon',
-    accent: '#ffd166',
+    accent: BRAND_COLORS.amber,
     totalLevels: 0,
   },
   {
@@ -53,7 +65,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Descubre el mundo con curiosidad.',
     icon: '🌎',
     status: 'coming_soon',
-    accent: '#90e0b2',
+    accent: BRAND_COLORS.emerald,
     totalLevels: 0,
   },
   {
@@ -64,7 +76,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Palabras y frases en inglés.',
     icon: '🇺🇸',
     status: 'coming_soon',
-    accent: '#4cc9f0',
+    accent: BRAND_COLORS.sky,
     totalLevels: 0,
   },
   {
@@ -75,7 +87,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Colorea, inventa y expresa ideas.',
     icon: '🎨',
     status: 'coming_soon',
-    accent: '#ff8fab',
+    accent: BRAND_COLORS.pink,
     totalLevels: 0,
   },
 ]

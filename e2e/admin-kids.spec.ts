@@ -3,7 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Mis Juegos E2E', () => {
   test('admin agrega niño, tema y el dashboard adapta por edad', async ({ page }) => {
     await page.goto('/')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+    })
     await page.reload()
 
     await expect(page.getByRole('heading', { name: /¿Quién va a jugar hoy/i })).toBeVisible()
@@ -36,7 +39,10 @@ test.describe('Mis Juegos E2E', () => {
 
   test('rate limit bloquea PIN tras varios intentos', async ({ page }) => {
     await page.goto('/admin')
-    await page.evaluate(() => localStorage.clear())
+    await page.evaluate(() => {
+      localStorage.clear()
+      sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+    })
     await page.reload()
 
     for (let i = 0; i < 6; i += 1) {

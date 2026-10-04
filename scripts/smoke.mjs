@@ -20,7 +20,10 @@ async function main() {
   const page = await context.newPage()
 
   await page.goto(base)
-  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(() => {
+    localStorage.clear()
+    sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+  })
   await page.reload()
   await page.screenshot({ path: '/opt/cursor/artifacts/screenshots/profiles.png', fullPage: true })
 

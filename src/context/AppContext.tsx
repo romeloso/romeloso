@@ -13,6 +13,7 @@ import { ADMIN_CONFIG, PROFILE_SEEDS } from '@/config/profiles'
 import { evaluateAchievements } from '@/data/achievements'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
+import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
@@ -165,6 +166,7 @@ function migrateState(raw: AppState | null): AppState {
 
   const readingLevels = getAvailableReadingLevels(contentBank)
   const typingLevels = TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
+  const wordsearchLevels = getWordSearchLevels()
 
   const progressEntries = Object.entries(raw.progress ?? {}).map(([childId, games]) => {
     const defaults = createDefaultProgressForChild(contentBank)
@@ -174,6 +176,11 @@ function migrateState(raw: AppState | null): AppState {
     }
     if (merged.typing) {
       merged.typing = syncGameProgressWithLevels(merged.typing, typingLevels)
+    }
+    if (merged.wordsearch) {
+      merged.wordsearch = syncGameProgressWithLevels(merged.wordsearch, wordsearchLevels)
+    } else {
+      merged.wordsearch = defaults.wordsearch
     }
     return [childId, merged] as const
   })
@@ -296,7 +303,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ? getAvailableReadingLevels(state.contentBank, age)
           : result.gameId === 'typing'
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
-            : []
+            : result.gameId === 'wordsearch'
+              ? getWordSearchLevels(age)
+              : []
 
       const currentGameProgress = childProgress[result.gameId]
       const nextGameProgress = applyLessonResult(currentGameProgress, levels, [], result)

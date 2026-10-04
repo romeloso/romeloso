@@ -3,6 +3,7 @@ import { defaultAvatarFor, seedAvatarLibraryItems } from '@/config/avatars'
 import { createInitialGameProgress } from '@/domain/progress'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
+import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { createAvatarLibraryItem } from '@/services/contentService'
 import type { AppState, ChildProfile, ContentBank, GameId, GameProgress } from '@/types'
 
@@ -40,7 +41,7 @@ export function createChildProfile(input: {
   const accent =
     input.accent ??
     ACCENT_PALETTE[Math.floor(Math.random() * ACCENT_PALETTE.length)] ??
-    '#0f9b8e'
+    '#6366F1'
 
   return {
     id,
@@ -70,6 +71,7 @@ export function createDefaultProgressForChild(
       'typing',
       TYPING_LEVELS.filter((level) => level.lessonIds.length > 0),
     ),
+    wordsearch: createInitialGameProgress('wordsearch', getWordSearchLevels()),
     memory: createInitialGameProgress('memory', []),
     math: createInitialGameProgress('math', []),
     science: createInitialGameProgress('science', []),

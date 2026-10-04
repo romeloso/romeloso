@@ -6,6 +6,7 @@ import { useApp } from '@/context/AppContext'
 import { getGameBySlug } from '@/data/games/registry'
 import { getAvailableReadingLevels, getReadingLesson } from '@/data/games/reading/levels'
 import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
+import { getWordSearchLevels, getWordSearchLesson } from '@/data/games/wordsearch/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { ageFromBirthDate, formatAge } from '@/lib/age'
 import { cn } from '@/lib/cn'
@@ -40,7 +41,7 @@ export function GameHubPage() {
           <p className="text-6xl">{game.icon}</p>
           <h1 className="mt-4 font-display text-4xl font-bold">{game.title}</h1>
           <p className="mt-3 text-lg font-semibold text-ink-soft">
-            Este juego llegará pronto. ¡Mientras tanto practica lectura y tecleo!
+            Este juego llegará pronto. ¡Mientras tanto practica lectura, tecleo o sopa de letras!
           </p>
           {subjectTopics.length > 0 ? (
             <div className="mx-auto mt-6 max-w-lg rounded-2xl bg-sand/70 p-4 text-left">
@@ -67,7 +68,9 @@ export function GameHubPage() {
       ? getAvailableReadingLevels(state.contentBank, age)
       : game.id === 'typing'
         ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
-        : []
+        : game.id === 'wordsearch'
+          ? getWordSearchLevels(age)
+          : []
   const progress = getGameProgress(game.id)
 
   return (
@@ -137,19 +140,25 @@ export function GameHubPage() {
                   const lesson =
                     game.id === 'reading'
                       ? getReadingLesson(lessonId, state.contentBank, age)
-                      : getTypingLesson(lessonId)
+                      : game.id === 'typing'
+                        ? getTypingLesson(lessonId)
+                        : getWordSearchLesson(lessonId)
                   const lessonProgress = progress?.lessonProgress[lessonId]
                   const lessonUnlocked = Boolean(lessonProgress?.unlocked) && unlocked
-                  const fromAdmin = lesson?.source === 'admin'
 
                   return (
                     <Button
                       key={lessonId}
                       variant={lessonUnlocked ? 'primary' : 'secondary'}
                       disabled={!lessonUnlocked}
-                      onClick={() => navigate(`/games/${game.slug}/lesson/${lessonId}`)}
+                      onClick={() => {
+                        if (game.id === 'wordsearch') {
+                          navigate(`/games/sopa-de-letras/play/${lessonId}`)
+                          return
+                        }
+                        navigate(`/games/${game.slug}/lesson/${lessonId}`)
+                      }}
                     >
-                      {fromAdmin ? '✨ ' : ''}
                       {lesson?.title ?? lessonId}
                       {lessonProgress && lessonProgress.stars > 0
                         ? ` · ${'⭐'.repeat(lessonProgress.stars)}`

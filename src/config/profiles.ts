@@ -8,7 +8,7 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     name: 'Isabella',
     avatar: '🦊',
     avatarImage: defaultAvatarFor('isabella'),
-    accent: '#ff6b6b',
+    accent: '#EC4899',
     birthDate: null,
   },
   {
@@ -16,7 +16,7 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     name: 'Sophia',
     avatar: '🐰',
     avatarImage: defaultAvatarFor('sophia'),
-    accent: '#ff8fab',
+    accent: '#F59E0B',
     birthDate: null,
   },
   {
@@ -24,19 +24,19 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     name: 'Valentina',
     avatar: '🐱',
     avatarImage: defaultAvatarFor('valentina'),
-    accent: '#4cc9f0',
+    accent: '#3B82F6',
     birthDate: null,
   },
 ]
 
 export const ACCENT_PALETTE = [
-  '#ff6b6b',
-  '#ff8fab',
-  '#4cc9f0',
-  '#0f9b8e',
-  '#ffd166',
-  '#b8a1ff',
-  '#90e0b2',
+  '#EC4899',
+  '#6366F1',
+  '#3B82F6',
+  '#10B981',
+  '#F59E0B',
+  '#8B5CF6',
+  '#FDE047',
 ] as const
 
 /** Acceso al módulo administrador (MVP local). */

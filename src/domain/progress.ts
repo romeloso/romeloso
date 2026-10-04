@@ -56,7 +56,14 @@ export function createInitialGameProgress(
     gameId,
     unlockedLevelIds: firstLevel ? [firstLevel.id] : [],
     lessonProgress,
-    stats: gameId === 'reading' ? createEmptyReadingStats() : gameId === 'typing' ? createEmptyTypingStats() : {},
+    stats:
+      gameId === 'reading'
+        ? createEmptyReadingStats()
+        : gameId === 'typing'
+          ? createEmptyTypingStats()
+          : gameId === 'wordsearch'
+            ? { puzzlesCompleted: 0, wordsFound: 0 }
+            : {},
   }
 }
 
@@ -208,6 +215,14 @@ export function applyLessonResult(
       typing.correctKeystrokes += attempt.correctChars ?? 0
     }
     stats = typing
+  }
+
+  if (result.gameId === 'wordsearch') {
+    const current = stats as { puzzlesCompleted?: number; wordsFound?: number }
+    stats = {
+      puzzlesCompleted: (current.puzzlesCompleted ?? 0) + 1,
+      wordsFound: (current.wordsFound ?? 0) + (result.words?.length ?? 0),
+    }
   }
 
   void lessons

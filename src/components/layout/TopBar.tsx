@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { APP_CONFIG } from '@/config/app'
+import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Button } from '@/components/ui/Button'
 import { useApp } from '@/context/AppContext'
 
@@ -17,10 +17,14 @@ export function TopBar({
 
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <p className="font-display text-2xl font-bold text-teal sm:text-3xl">{APP_CONFIG.name}</p>
-        <p className="text-sm font-semibold text-ink-soft">{APP_CONFIG.tagline}</p>
-      </div>
+      <button
+        type="button"
+        className="text-left transition hover:opacity-90"
+        onClick={() => navigate('/')}
+        aria-label="Sorova Games"
+      >
+        <BrandLogo size="sm" />
+      </button>
       <div className="flex flex-wrap items-center gap-2">
         {backTo ? (
           <Button variant="secondary" size="md" className="!min-h-11" onClick={() => navigate(backTo)}>
@@ -37,7 +41,7 @@ export function TopBar({
               navigate('/')
             }}
           >
-            Cambiar niña
+            Cambiar perfil
           </Button>
         ) : null}
         <Button

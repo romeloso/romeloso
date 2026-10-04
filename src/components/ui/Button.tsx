@@ -11,14 +11,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-teal text-white shadow-[0_4px_0_#0b7c72] hover:translate-y-px hover:shadow-[0_3px_0_#0b7c72] active:translate-y-1 active:shadow-none',
+    'bg-teal text-white shadow-[0_4px_0_#4f46e5] hover:translate-y-px hover:shadow-[0_3px_0_#4f46e5] active:translate-y-1 active:shadow-none',
   secondary:
-    'bg-white text-ink border-2 border-ink/10 shadow-[0_4px_0_rgba(31,42,55,0.12)] hover:bg-cream',
+    'bg-white text-ink border-2 border-ink/10 shadow-[0_4px_0_rgba(15,23,42,0.12)] hover:bg-cream',
   ghost: 'bg-transparent text-ink hover:bg-white/60',
   sunny:
-    'bg-sun text-ink shadow-[0_4px_0_#e0b24a] hover:translate-y-px active:translate-y-1 active:shadow-none',
+    'bg-sun text-ink shadow-[0_4px_0_#f59e0b] hover:translate-y-px active:translate-y-1 active:shadow-none',
   danger:
-    'bg-coral text-white shadow-[0_4px_0_#e85a5a] hover:translate-y-px active:translate-y-1 active:shadow-none',
+    'bg-coral text-white shadow-[0_4px_0_#db2777] hover:translate-y-px active:translate-y-1 active:shadow-none',
 }
 
 const sizes = {

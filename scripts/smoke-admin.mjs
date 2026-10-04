@@ -7,7 +7,10 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
 
   await page.goto(base)
-  await page.evaluate(() => localStorage.clear())
+  await page.evaluate(() => {
+    localStorage.clear()
+    sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+  })
   await page.reload()
 
   // Avatars visible

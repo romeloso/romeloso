@@ -4,6 +4,7 @@ import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
+import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { ageFromBirthDate } from '@/lib/age'
 import { cn } from '@/lib/cn'
@@ -85,7 +86,13 @@ export function ProgressMapPage() {
     <PageShell wide>
       <TopBar backTo="/dashboard" backLabel="Dashboard" showBackToProfiles />
       <h1 className="mb-6 font-display text-4xl font-bold">🌟 Mi aventura</h1>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <AdventurePath
+          title="🔤 Sopa de letras"
+          levels={getWordSearchLevels(age)}
+          progress={getGameProgress('wordsearch')}
+          onOpen={() => navigate('/games/sopa-de-letras')}
+        />
         <AdventurePath
           title="📚 Aventura de lectura"
           levels={getAvailableReadingLevels(state.contentBank, age)}

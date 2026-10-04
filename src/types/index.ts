@@ -3,6 +3,7 @@ export type GameStatus = 'available' | 'coming_soon' | 'locked'
 export type GameId =
   | 'reading'
   | 'typing'
+  | 'wordsearch'
   | 'memory'
   | 'math'
   | 'science'
@@ -230,7 +231,12 @@ export interface TypingStats {
   correctKeystrokes: number
 }
 
-export type GameStats = ReadingStats | TypingStats | Record<string, never>
+export interface WordSearchStats {
+  puzzlesCompleted: number
+  wordsFound: number
+}
+
+export type GameStats = ReadingStats | TypingStats | WordSearchStats | Record<string, never>
 
 export interface AchievementDefinition {
   id: string

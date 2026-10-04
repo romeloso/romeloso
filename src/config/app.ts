@@ -1,12 +1,25 @@
-/** Configuración central: cambiar el nombre de la app aquí. */
+/** Configuración central de marca Sorova Games. */
 export const APP_CONFIG = {
-  name: 'Mis Juegos',
+  name: 'Sorova Games',
   tagline: 'Aprender es una aventura',
-  version: '0.1.0',
+  slogan: 'Grandes sueños, pequeños logros',
+  version: '0.2.0',
   storageKey: 'mis-juegos.v1',
   unlockThreshold: 0.7,
   xpPerLevelBase: 100,
   defaultSoundEnabled: true,
+  brandImage: '/brand-sorova.jpg',
+} as const
+
+export const BRAND_COLORS = {
+  indigo: '#6366F1',
+  pink: '#EC4899',
+  amber: '#F59E0B',
+  emerald: '#10B981',
+  sky: '#3B82F6',
+  violet: '#8B5CF6',
+  yellow: '#FDE047',
+  navy: '#0F172A',
 } as const
 
 export const REWARD_RULES = {

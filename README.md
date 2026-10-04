@@ -1,20 +1,20 @@
-# Mis Juegos
+# Sorova Games
 
-Plataforma educativa infantil para Isabella, Sophia y Valentina.
+Plataforma educativa infantil (**Sorova Games**).
 
 **Aprender es una aventura.**
 
 ## Qué incluye (MVP)
 
+- Identidad visual Sorova + intro animado en el lobby
+- **Sopa de letras** con tablero navy y resaltados de marca
 - Perfiles dinámicos con fecha de nacimiento y edad
 - Avatares centralizados (galería + fotos subidas)
 - Dashboard con XP, monedas, racha, temas adaptados por edad
-- **Aprende a leer** niveles 1–8: letras, sílabas, palabras, **quiz**, **práctica con corrección instantánea** e historias
-- **Teclea como una experta** niveles 1–5
-- Panel **Administrador** (PIN `2468`): niños, temas por materia, galería de avatares, progreso y material
-- Temas de estudio/refuerzo filtrados por edad de cada niño
-- Recompensas, logros, mapa de aventura y resultados celebratorios
-- Arquitectura modular lista para más juegos
+- **Aprende a leer** niveles 1–8: letras, sílabas, palabras, quiz, práctica e historias
+- **Teclea como una experta**
+- Panel **Administrador** (PIN `2468`): niños, temas, avatares, progreso y material
+- Recompensas, logros y mapa de aventura
 - Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
 
 El nombre de la app se cambia en `src/config/app.ts`.
