@@ -20,9 +20,10 @@ async function main() {
 
   // Intro
   await page.getByRole('dialog', { name: /Introducción Sorova Games/i }).waitFor()
+  await page.waitForTimeout(1200)
   await page.screenshot({ path: `${outDir}/screenshots/sorova_intro.png`, fullPage: true })
-  await page.waitForTimeout(1800)
   await page.getByRole('button', { name: /¡Empezar la aventura!/i }).click({ force: true })
+  await page.getByRole('dialog', { name: /Introducción Sorova Games/i }).waitFor({ state: 'hidden' })
   await page.getByRole('heading', { name: /¿Quién va a jugar hoy/i }).waitFor()
   await page.screenshot({ path: `${outDir}/screenshots/sorova_lobby.png`, fullPage: true })
 

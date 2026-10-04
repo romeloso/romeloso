@@ -23,42 +23,42 @@ export function ProfileSelectPage() {
     )
   }
 
+  if (showIntro) {
+    return <LobbyIntro onDone={() => setShowIntro(false)} />
+  }
+
   return (
-    <>
-      {showIntro ? <LobbyIntro onDone={() => setShowIntro(false)} /> : null}
-
-      <PageShell wide>
-        <TopBar />
-        <section className="mb-8 text-center">
-          <div className="mb-5 flex justify-center">
-            <BrandLogo size="lg" showTagline />
-          </div>
-          <h1 className="font-display text-4xl font-bold text-ink sm:text-5xl text-balance">
-            ¿Quién va a jugar hoy?
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-lg font-semibold text-ink-soft">
-            Elige tu perfil para guardar tu aventura, tus estrellas y tus monedas.
-          </p>
-        </section>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {profiles.map((profile) => (
-            <ProfileCard
-              key={profile.id}
-              profile={profile}
-              onSelect={() => {
-                selectProfile(profile.id)
-                navigate('/dashboard')
-              }}
-            />
-          ))}
+    <PageShell wide>
+      <TopBar />
+      <section className="mb-8 text-center">
+        <div className="mb-5 flex justify-center">
+          <BrandLogo size="lg" showTagline />
         </div>
+        <h1 className="font-display text-4xl font-bold text-ink sm:text-5xl text-balance">
+          ¿Quién va a jugar hoy?
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-lg font-semibold text-ink-soft">
+          Elige tu perfil para guardar tu aventura, tus estrellas y tus monedas.
+        </p>
+      </section>
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {profiles.map((profile) => (
+          <ProfileCard
+            key={profile.id}
+            profile={profile}
+            onSelect={() => {
+              selectProfile(profile.id)
+              navigate('/dashboard')
+            }}
+          />
+        ))}
+      </div>
 
-        <div className="mt-10 flex justify-center">
-          <Button variant="secondary" onClick={() => navigate('/admin')}>
-            Acceso Administrador
-          </Button>
-        </div>
-      </PageShell>
-    </>
+      <div className="mt-10 flex justify-center">
+        <Button variant="secondary" onClick={() => navigate('/admin')}>
+          Acceso Administrador
+        </Button>
+      </div>
+    </PageShell>
   )
 }
