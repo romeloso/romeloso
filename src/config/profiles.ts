@@ -46,5 +46,5 @@ export const ACCENT_PALETTE = [
 export const ADMIN_CONFIG = {
   roleLabel: 'Administrador',
   /** PIN simple para padres/admin en el MVP local. */
-  pin: '2468',
+  pin: '4716',
 } as const

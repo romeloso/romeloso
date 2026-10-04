@@ -22,7 +22,7 @@ async function main() {
   // Admin login
   await page.getByRole('button', { name: /Acceso Administrador/i }).click()
   await page.waitForURL('**/admin')
-  await page.getByPlaceholder('••••').fill('2468')
+  await page.getByPlaceholder('••••').fill('4716')
   await page.getByRole('button', { name: 'Entrar' }).click()
   await page.waitForURL('**/admin/panel')
   await page.getByText('Panel Administrador').waitFor()

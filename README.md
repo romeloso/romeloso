@@ -13,7 +13,7 @@ Plataforma educativa infantil (**Sorova Games**).
 - Dashboard con XP, monedas, racha, temas adaptados por edad
 - **Aprende a leer** niveles 1–8: letras, sílabas, palabras, quiz, práctica e historias
 - **Teclea como una experta**
-- Panel **Administrador** (PIN `2468`): niños, temas, avatares, progreso y material
+- Panel **Administrador** (PIN `4716`): niños, temas, avatares, progreso y material
 - Recompensas, logros y mapa de aventura
 - Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
 
@@ -47,7 +47,7 @@ Rendimiento, caché, índices y rate limiting: ver `docs/PERFORMANCE.md`.
 ## Administrador
 
 1. En la pantalla de perfiles, toca **Acceso Administrador**
-2. PIN: `2468`
+2. PIN: `4716`
 3. Pestaña **Niños**: agregar perfiles, fechas de nacimiento y fotos
 4. Pestaña **Temas**: temas por materia con rango de edad
 5. Pestaña **Avatares**: galería central de fotos/avatares

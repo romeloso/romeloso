@@ -12,7 +12,7 @@ test.describe('Mis Juegos E2E', () => {
     await expect(page.getByRole('heading', { name: /¿Quién va a jugar hoy/i })).toBeVisible()
 
     await page.getByRole('button', { name: /Acceso Administrador/i }).click()
-    await page.getByPlaceholder('••••').fill('2468')
+    await page.getByPlaceholder('••••').fill('4716')
     await page.getByRole('button', { name: 'Entrar' }).click()
     await expect(page.getByText('Panel Administrador')).toBeVisible()
 

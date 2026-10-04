@@ -15,7 +15,7 @@ function Probe() {
       <p>Temas: {state.contentBank.topics.length}</p>
       <Button
         onClick={() => {
-          const result = loginAdmin('2468')
+          const result = loginAdmin('4716')
           if (!result.ok) throw new Error(result.error)
         }}
       >
