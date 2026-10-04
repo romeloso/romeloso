@@ -1,4 +1,6 @@
+import { contentFitsLearner } from '@/lib/grade'
 import { generateWordSearch, type WordSearchPuzzle } from '@/lib/wordsearch'
+import type { SchoolGrade } from '@/types'
 
 export interface WordSearchLevelDef {
   id: string
@@ -10,6 +12,8 @@ export interface WordSearchLevelDef {
   words: string[]
   minAge: number
   maxAge: number
+  minGrade: number
+  maxGrade: number
 }
 
 export const WORDSEARCH_LEVEL_DEFS: WordSearchLevelDef[] = [
@@ -23,6 +27,8 @@ export const WORDSEARCH_LEVEL_DEFS: WordSearchLevelDef[] = [
     words: ['SOL', 'LUNA', 'MAR', 'CASA', 'GATO', 'MESA'],
     minAge: 3,
     maxAge: 12,
+    minGrade: 0,
+    maxGrade: 3,
   },
   {
     id: 'wordsearch-l2',
@@ -34,6 +40,8 @@ export const WORDSEARCH_LEVEL_DEFS: WordSearchLevelDef[] = [
     words: ['LIBRO', 'LAPIZ', 'TAREA', 'CLASE', 'AMIGO', 'JUEGO'],
     minAge: 5,
     maxAge: 12,
+    minGrade: 1,
+    maxGrade: 4,
   },
   {
     id: 'wordsearch-l3',
@@ -45,6 +53,8 @@ export const WORDSEARCH_LEVEL_DEFS: WordSearchLevelDef[] = [
     words: ['SOROVA', 'JUEGO', 'ESTRELLA', 'SUENO', 'LOGRO', 'AVENTURA'],
     minAge: 6,
     maxAge: 12,
+    minGrade: 2,
+    maxGrade: 6,
   },
   {
     id: 'wordsearch-l4',
@@ -56,6 +66,8 @@ export const WORDSEARCH_LEVEL_DEFS: WordSearchLevelDef[] = [
     words: ['ARBOL', 'FLORES', 'RIO', 'NUBE', 'PAJARO', 'MONTAÑA'],
     minAge: 7,
     maxAge: 12,
+    minGrade: 3,
+    maxGrade: 6,
   },
 ]
 
@@ -71,9 +83,11 @@ export function getWordSearchPuzzle(levelId: string): WordSearchPuzzle | undefin
   return puzzle
 }
 
-export function getWordSearchLevelsForAge(age: number | null) {
-  return WORDSEARCH_LEVEL_DEFS.filter((level) => {
-    if (age == null) return true
-    return age >= level.minAge && age <= level.maxAge
-  })
+export function getWordSearchLevelsForAge(
+  age: number | null,
+  grade: SchoolGrade | null = null,
+) {
+  return WORDSEARCH_LEVEL_DEFS.filter((level) =>
+    contentFitsLearner(level, { age, grade }),
+  )
 }

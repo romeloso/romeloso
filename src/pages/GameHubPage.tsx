@@ -9,8 +9,9 @@ import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
 import { getWordSearchLevels, getWordSearchLesson } from '@/data/games/wordsearch/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { ageFromBirthDate, formatAge } from '@/lib/age'
+import { effectiveLearningAge, formatGrade } from '@/lib/grade'
 import { cn } from '@/lib/cn'
-import { getCachedTopicsForAge } from '@/services/cache/contentCache'
+import { getCachedTopicsForLearner } from '@/services/cache/contentCache'
 import type { GameLevelMeta } from '@/types'
 
 export function GameHubPage() {
@@ -30,8 +31,13 @@ export function GameHubPage() {
     )
   }
 
-  const age = ageFromBirthDate(activeProfile.birthDate)
-  const subjectTopics = getCachedTopicsForAge(state.contentBank.topics, age, game.id)
+  const age = effectiveLearningAge(ageFromBirthDate(activeProfile.birthDate), activeProfile.grade)
+  const grade = activeProfile.grade
+  const subjectTopics = getCachedTopicsForLearner(
+    state.contentBank.topics,
+    { age, grade },
+    game.id,
+  )
 
   if (game.status !== 'available') {
     return (
@@ -65,11 +71,11 @@ export function GameHubPage() {
 
   const levels: GameLevelMeta[] =
     game.id === 'reading'
-      ? getAvailableReadingLevels(state.contentBank, age)
+      ? getAvailableReadingLevels(state.contentBank, age, grade)
       : game.id === 'typing'
         ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
         : game.id === 'wordsearch'
-          ? getWordSearchLevels(age)
+          ? getWordSearchLevels(age, grade)
           : []
   const progress = getGameProgress(game.id)
 
@@ -83,7 +89,8 @@ export function GameHubPage() {
         <h1 className="mt-2 font-display text-4xl font-bold">{game.title}</h1>
         <p className="mt-2 text-lg font-semibold text-white/90">{game.description}</p>
         <p className="mt-2 text-sm font-bold text-white/80">
-          Nivel adaptado a {formatAge(age)}
+          Adaptado a {formatGrade(grade)}
+          {age != null ? ` · ${formatAge(age)}` : ''}
         </p>
       </section>
 

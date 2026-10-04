@@ -23,7 +23,7 @@ function Probe() {
       </Button>
       <Button
         onClick={() => {
-          addChildProfile({ name: 'Nora', birthDate: '2020-01-01' })
+          addChildProfile({ name: 'Nora', birthDate: '2020-01-01', grade: 1 })
         }}
       >
         Add child

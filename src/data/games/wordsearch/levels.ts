@@ -1,8 +1,11 @@
-import type { GameLevelMeta, LessonDefinition } from '@/types'
+import type { GameLevelMeta, LessonDefinition, SchoolGrade } from '@/types'
 import { getWordSearchLevelsForAge, getWordSearchPuzzle } from './puzzles'
 
-export function getWordSearchLevels(age: number | null = null): GameLevelMeta[] {
-  return getWordSearchLevelsForAge(age).map((level) => ({
+export function getWordSearchLevels(
+  age: number | null = null,
+  grade: SchoolGrade | null = null,
+): GameLevelMeta[] {
+  return getWordSearchLevelsForAge(age, grade).map((level) => ({
     id: level.id,
     gameId: 'wordsearch',
     order: level.order,

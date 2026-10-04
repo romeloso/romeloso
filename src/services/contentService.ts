@@ -1,4 +1,5 @@
-import { topicFitsAge } from '@/lib/age'
+import { contentFitsLearner } from '@/lib/grade'
+import type { SchoolGrade } from '@/types'
 import { invalidateContentCaches } from '@/services/cache/contentCache'
 import type {
   AdminPassageItem,
@@ -12,6 +13,11 @@ import type {
   StudyTopic,
   WordQuizActivity,
 } from '@/types'
+
+export interface LearnerContext {
+  age: number | null
+  grade: SchoolGrade | null
+}
 
 const choice = (value: string): ChoiceOption => ({
   id: value,
@@ -37,14 +43,16 @@ function normalizeBank(bank: ContentBank): ContentBank {
   }
 }
 
-/** Convierte material del admin en lecciones jugables de lectura, filtradas por edad. */
+/** Convierte material del admin en lecciones jugables de lectura, filtradas por edad/grado. */
 export function buildAdminReadingLessons(
   bank: ContentBank,
   age: number | null = null,
+  grade: SchoolGrade | null = null,
 ): LessonDefinition[] {
   const normalized = normalizeBank(bank)
-  const words = normalized.words.filter((item) => topicFitsAge(item, age))
-  const passages = normalized.passages.filter((item) => topicFitsAge(item, age))
+  const learner = { age, grade }
+  const words = normalized.words.filter((item) => contentFitsLearner(item, learner))
+  const passages = normalized.passages.filter((item) => contentFitsLearner(item, learner))
   const lessons: LessonDefinition[] = []
 
   if (words.length > 0) {
@@ -143,6 +151,8 @@ export function createAdminWord(input: {
   distractors: string[]
   minAge?: number
   maxAge?: number
+  minGrade?: number
+  maxGrade?: number
 }): AdminWordItem {
   invalidateContentCaches()
   return {
@@ -153,6 +163,8 @@ export function createAdminWord(input: {
     distractors: input.distractors.map((item) => item.trim()).filter(Boolean),
     minAge: input.minAge ?? 3,
     maxAge: input.maxAge ?? 12,
+    minGrade: input.minGrade ?? 0,
+    maxGrade: input.maxGrade ?? 6,
     createdAt: new Date().toISOString(),
   }
 }
@@ -165,6 +177,8 @@ export function createAdminPassage(input: {
   answer: string
   minAge?: number
   maxAge?: number
+  minGrade?: number
+  maxGrade?: number
 }): AdminPassageItem {
   invalidateContentCaches()
   return {
@@ -176,6 +190,8 @@ export function createAdminPassage(input: {
     answer: input.answer.trim(),
     minAge: input.minAge ?? 3,
     maxAge: input.maxAge ?? 12,
+    minGrade: input.minGrade ?? 0,
+    maxGrade: input.maxGrade ?? 6,
     createdAt: new Date().toISOString(),
   }
 }
@@ -186,6 +202,8 @@ export function createStudyTopic(input: {
   description: string
   minAge?: number
   maxAge?: number
+  minGrade?: number
+  maxGrade?: number
   reinforce?: boolean
 }): StudyTopic {
   invalidateContentCaches()
@@ -196,6 +214,8 @@ export function createStudyTopic(input: {
     description: input.description.trim(),
     minAge: input.minAge ?? 3,
     maxAge: input.maxAge ?? 12,
+    minGrade: input.minGrade ?? 0,
+    maxGrade: input.maxGrade ?? 6,
     reinforce: Boolean(input.reinforce),
     createdAt: new Date().toISOString(),
   }
@@ -215,8 +235,16 @@ export function createAvatarLibraryItem(input: {
 }
 
 export function topicsForAge(topics: StudyTopic[], age: number | null, subjectId?: GameId) {
+  return topicsForLearner(topics, { age, grade: null }, subjectId)
+}
+
+export function topicsForLearner(
+  topics: StudyTopic[],
+  learner: LearnerContext,
+  subjectId?: GameId,
+) {
   return topics.filter(
     (topic) =>
-      topicFitsAge(topic, age) && (subjectId ? topic.subjectId === subjectId : true),
+      contentFitsLearner(topic, learner) && (subjectId ? topic.subjectId === subjectId : true),
   )
 }

@@ -17,10 +17,14 @@ test.describe('Mis Juegos E2E', () => {
     await expect(page.getByText('Panel Administrador')).toBeVisible()
 
     await page.getByRole('button', { name: 'Niños' }).click()
-    await page.getByPlaceholder('Nombre').fill('Elena')
-    await page.locator('input[type="date"]').first().fill('2018-08-20')
-    await page.getByRole('button', { name: 'Guardar perfil' }).click()
+    const addForm = page.locator('section', { has: page.getByRole('heading', { name: /Agregar niño/i }) })
+    await addForm.getByPlaceholder('Nombre').fill('Elena')
+    await addForm.getByLabel('Grado escolar').selectOption('2')
+    await addForm.locator('input[type="date"]').fill('2018-08-20')
+    await addForm.getByRole('button', { name: 'Guardar perfil' }).click()
     await expect(page.getByText(/Niño o niña agregado/i)).toBeVisible()
+    const elenaCard = page.locator('li', { has: page.getByDisplayValue('Elena') })
+    await expect(elenaCard.getByLabel(/Grado escolar/i)).toHaveValue('2')
 
     await page.getByRole('button', { name: 'Temas' }).click()
     await page.getByPlaceholder('Título del tema').fill('Rimas fáciles')

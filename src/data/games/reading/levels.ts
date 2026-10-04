@@ -1,4 +1,4 @@
-import type { ContentBank, GameLevelMeta, LessonDefinition } from '@/types'
+import type { ContentBank, GameLevelMeta, LessonDefinition, SchoolGrade } from '@/types'
 import { READING_LESSONS } from './content'
 import { READING_QUIZ_AND_PRACTICE_LESSONS } from './quizContent'
 import { getCachedAdminReadingLessons } from '@/services/cache/contentCache'
@@ -85,8 +85,9 @@ export function getBuiltinReadingLessons(): LessonDefinition[] {
 export function getReadingLessons(
   bank?: ContentBank,
   age: number | null = null,
+  grade: SchoolGrade | null = null,
 ): LessonDefinition[] {
-  const adminLessons = bank ? getCachedAdminReadingLessons(bank, age) : []
+  const adminLessons = bank ? getCachedAdminReadingLessons(bank, age, grade) : []
   const adminIds = new Set(adminLessons.map((lesson) => lesson.id))
   const builtin = getBuiltinReadingLessons().filter((lesson) => !adminIds.has(lesson.id))
   return [...builtin, ...adminLessons]
@@ -96,16 +97,18 @@ export function getReadingLesson(
   lessonId: string,
   bank?: ContentBank,
   age: number | null = null,
+  grade: SchoolGrade | null = null,
 ): LessonDefinition | undefined {
-  return getReadingLessons(bank, age).find((lesson) => lesson.id === lessonId)
+  return getReadingLessons(bank, age, grade).find((lesson) => lesson.id === lessonId)
 }
 
-/** Niveles con lecciones realmente disponibles según el bank y la edad. */
+/** Niveles con lecciones realmente disponibles según el bank, edad y grado. */
 export function getAvailableReadingLevels(
   bank?: ContentBank,
   age: number | null = null,
+  grade: SchoolGrade | null = null,
 ): GameLevelMeta[] {
-  const lessons = getReadingLessons(bank, age)
+  const lessons = getReadingLessons(bank, age, grade)
   const availableIds = new Set(lessons.map((lesson) => lesson.id))
 
   return READING_LEVELS.map((level) => ({

@@ -10,7 +10,9 @@ import { ACCENT_PALETTE } from '@/config/profiles'
 import { useApp } from '@/context/AppContext'
 import { GAME_DEFINITIONS } from '@/data/games/registry'
 import { overallGameCompletion } from '@/domain/progress'
+import { GradeRangeInputs, GradeSelect } from '@/components/admin/GradeSelect'
 import { ageFromBirthDate, formatAge } from '@/lib/age'
+import { formatGrade, type SchoolGrade } from '@/lib/grade'
 import { fileToAvatarDataUrl } from '@/lib/image'
 import { formatNumber, formatPercent } from '@/lib/format'
 import type { GameId, ReadingStats, TypingStats } from '@/types'
@@ -87,6 +89,7 @@ export function AdminPanelPage() {
 
   const [childName, setChildName] = useState('')
   const [childBirthDate, setChildBirthDate] = useState('')
+  const [childGrade, setChildGrade] = useState<SchoolGrade | null>(null)
   const [childAccent, setChildAccent] = useState<string>(ACCENT_PALETTE[0]!)
   const [childAvatarSrc, setChildAvatarSrc] = useState('')
 
@@ -95,6 +98,8 @@ export function AdminPanelPage() {
   const [topicDescription, setTopicDescription] = useState('')
   const [topicMinAge, setTopicMinAge] = useState(3)
   const [topicMaxAge, setTopicMaxAge] = useState(12)
+  const [topicMinGrade, setTopicMinGrade] = useState(0)
+  const [topicMaxGrade, setTopicMaxGrade] = useState(6)
   const [topicReinforce, setTopicReinforce] = useState(true)
 
   const [avatarLabel, setAvatarLabel] = useState('')
@@ -106,6 +111,8 @@ export function AdminPanelPage() {
   const [distractors, setDistractors] = useState('CASA, MESA')
   const [wordMinAge, setWordMinAge] = useState(3)
   const [wordMaxAge, setWordMaxAge] = useState(12)
+  const [wordMinGrade, setWordMinGrade] = useState(0)
+  const [wordMaxGrade, setWordMaxGrade] = useState(6)
 
   const [title, setTitle] = useState('')
   const [text, setText] = useState('')
@@ -114,6 +121,8 @@ export function AdminPanelPage() {
   const [answer, setAnswer] = useState('Toby')
   const [passageMinAge, setPassageMinAge] = useState(3)
   const [passageMaxAge, setPassageMaxAge] = useState(12)
+  const [passageMinGrade, setPassageMinGrade] = useState(0)
+  const [passageMaxGrade, setPassageMaxGrade] = useState(6)
 
   const profiles = useMemo(() => Object.values(state.profiles), [state.profiles])
   const library = state.contentBank.avatarLibrary
@@ -173,7 +182,7 @@ export function AdminPanelPage() {
           <section className={sectionClass}>
             <h2 className="font-display text-2xl font-bold">Agregar niño o niña</h2>
             <p className="mt-1 text-sm font-semibold text-ink-soft">
-              Indica el nombre y la fecha de nacimiento para adaptar los temas a su edad.
+              Indica el grado y la fecha de nacimiento para adaptar la dificultad y los temas.
             </p>
             <div className="mt-4 space-y-3">
               <input
@@ -182,6 +191,7 @@ export function AdminPanelPage() {
                 value={childName}
                 onChange={(e) => setChildName(e.target.value)}
               />
+              <GradeSelect value={childGrade} onChange={setChildGrade} />
               <label className="block text-sm font-bold text-ink-soft">
                 Fecha de nacimiento
                 <input
@@ -236,11 +246,13 @@ export function AdminPanelPage() {
                     addChildProfile({
                       name: childName,
                       birthDate: childBirthDate || null,
+                      grade: childGrade,
                       accent: childAccent,
                       avatarImage: childAvatarSrc || undefined,
                     })
                     setChildName('')
                     setChildBirthDate('')
+                    setChildGrade(null)
                     setChildAvatarSrc('')
                     flash('Niño o niña agregado. Ya aparece en la selección de perfiles.')
                   } catch (error) {
@@ -275,6 +287,11 @@ export function AdminPanelPage() {
                           onChange={(e) =>
                             updateChildProfile(profile.id, { name: e.target.value })
                           }
+                        />
+                        <GradeSelect
+                          value={profile.grade}
+                          onChange={(grade) => updateChildProfile(profile.id, { grade })}
+                          label={`Grado escolar · ${formatGrade(profile.grade)}`}
                         />
                         <label className="block text-sm font-bold text-ink-soft">
                           Fecha de nacimiento · {formatAge(age)}
@@ -371,6 +388,12 @@ export function AdminPanelPage() {
                 onMin={setTopicMinAge}
                 onMax={setTopicMaxAge}
               />
+              <GradeRangeInputs
+                minGrade={topicMinGrade}
+                maxGrade={topicMaxGrade}
+                onMin={setTopicMinGrade}
+                onMax={setTopicMaxGrade}
+              />
               <label className="flex items-center gap-2 text-sm font-bold text-ink-soft">
                 <input
                   type="checkbox"
@@ -389,11 +412,13 @@ export function AdminPanelPage() {
                       description: topicDescription,
                       minAge: topicMinAge,
                       maxAge: topicMaxAge,
+                      minGrade: topicMinGrade,
+                      maxGrade: topicMaxGrade,
                       reinforce: topicReinforce,
                     })
                     setTopicTitle('')
                     setTopicDescription('')
-                    flash('Tema agregado. Se adaptará a la edad de cada niño.')
+                    flash('Tema agregado. Se adaptará a la edad y grado de cada niño.')
                   } catch (error) {
                     flash(error instanceof Error ? error.message : 'No se pudo guardar el tema')
                   }
@@ -423,7 +448,8 @@ export function AdminPanelPage() {
                         </p>
                         <p className="text-sm font-semibold text-ink-soft">{topic.description}</p>
                         <p className="mt-1 text-xs font-bold text-teal">
-                          {game?.shortTitle ?? topic.subjectId} · {topic.minAge}–{topic.maxAge} años
+                          {game?.shortTitle ?? topic.subjectId} · {topic.minAge}–{topic.maxAge} años ·
+                          grado {topic.minGrade}–{topic.maxGrade}
                           {topic.reinforce ? ' · Refuerzo' : ''}
                         </p>
                       </div>
@@ -578,7 +604,7 @@ export function AdminPanelPage() {
                     <div>
                       <h2 className="font-display text-2xl font-bold">{profile.name}</h2>
                       <p className="font-semibold text-ink-soft">
-                        Nivel {profile.level} · {formatAge(age)}
+                        Nivel {profile.level} · {formatAge(age)} · {formatGrade(profile.grade)}
                       </p>
                       <Button
                         size="md"
@@ -667,6 +693,12 @@ export function AdminPanelPage() {
                 onMin={setWordMinAge}
                 onMax={setWordMaxAge}
               />
+              <GradeRangeInputs
+                minGrade={wordMinGrade}
+                maxGrade={wordMaxGrade}
+                onMin={setWordMinGrade}
+                onMax={setWordMaxGrade}
+              />
               <Button
                 onClick={() => {
                   if (!word.trim()) return
@@ -678,6 +710,8 @@ export function AdminPanelPage() {
                       distractors: distractors.split(',').map((item) => item.trim()),
                       minAge: wordMinAge,
                       maxAge: wordMaxAge,
+                      minGrade: wordMinGrade,
+                      maxGrade: wordMaxGrade,
                     })
                     setWord('')
                     setClue('')
@@ -700,7 +734,7 @@ export function AdminPanelPage() {
                   <span className="font-bold">
                     {item.image} {item.word}{' '}
                     <span className="text-xs text-ink-soft">
-                      ({item.minAge}–{item.maxAge} años)
+                      ({item.minAge}–{item.maxAge} años · g{item.minGrade}–{item.maxGrade})
                     </span>
                   </span>
                   <Button variant="ghost" size="md" onClick={() => removeWordMaterial(item.id)}>
@@ -753,6 +787,12 @@ export function AdminPanelPage() {
                 onMin={setPassageMinAge}
                 onMax={setPassageMaxAge}
               />
+              <GradeRangeInputs
+                minGrade={passageMinGrade}
+                maxGrade={passageMaxGrade}
+                onMin={setPassageMinGrade}
+                onMax={setPassageMaxGrade}
+              />
               <Button
                 onClick={() => {
                   if (!title.trim() || !text.trim() || !question.trim() || !answer.trim()) return
@@ -765,6 +805,8 @@ export function AdminPanelPage() {
                       answer,
                       minAge: passageMinAge,
                       maxAge: passageMaxAge,
+                      minGrade: passageMinGrade,
+                      maxGrade: passageMaxGrade,
                     })
                     setTitle('')
                     setText('')
@@ -788,7 +830,7 @@ export function AdminPanelPage() {
                   <span className="font-bold">
                     {item.title}{' '}
                     <span className="text-xs text-ink-soft">
-                      ({item.minAge}–{item.maxAge} años)
+                      ({item.minAge}–{item.maxAge} años · g{item.minGrade}–{item.maxGrade})
                     </span>
                   </span>
                   <Button variant="ghost" size="md" onClick={() => removePassageMaterial(item.id)}>

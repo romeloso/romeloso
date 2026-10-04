@@ -1,5 +1,6 @@
 import { Avatar } from '@/components/profile/Avatar'
 import { ageFromBirthDate, formatAge } from '@/lib/age'
+import { formatGrade } from '@/lib/grade'
 import type { ChildProfile } from '@/types'
 import { cn } from '@/lib/cn'
 
@@ -28,8 +29,9 @@ export function ProfileCard({
       />
       <span className="font-display text-3xl font-bold text-ink">{profile.name}</span>
       <span className="rounded-xl bg-sand px-3 py-1 text-sm font-bold text-ink-soft">
-        Nivel {profile.level} · {formatAge(age)}
+        Nivel {profile.level} · {formatGrade(profile.grade)}
       </span>
+      <span className="text-xs font-semibold text-ink-soft">{formatAge(age)}</span>
     </button>
   )
 }

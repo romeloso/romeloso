@@ -13,9 +13,14 @@ import { GAME_DEFINITIONS } from '@/data/games/registry'
 import { ACHIEVEMENTS } from '@/data/achievements'
 import { overallGameCompletion } from '@/domain/progress'
 import { ageBandFromAge, ageBandLabel, ageFromBirthDate, formatAge } from '@/lib/age'
+import {
+  difficultyFromGrade,
+  effectiveLearningAge,
+  formatGrade,
+} from '@/lib/grade'
 import { formatNumber } from '@/lib/format'
 import { xpProgressWithinLevel } from '@/lib/xp'
-import { getCachedTopicsForAge } from '@/services/cache/contentCache'
+import { getCachedTopicsForLearner } from '@/services/cache/contentCache'
 import type { ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
@@ -25,11 +30,13 @@ export function DashboardPage() {
   const [editingAvatar, setEditingAvatar] = useState(false)
   const [editingBirthDate, setEditingBirthDate] = useState(false)
 
-  const age = ageFromBirthDate(activeProfile?.birthDate)
-  const band = ageBandFromAge(age)
+  const birthAge = ageFromBirthDate(activeProfile?.birthDate)
+  const grade = activeProfile?.grade ?? null
+  const age = effectiveLearningAge(birthAge, grade)
+  const band = grade != null ? difficultyFromGrade(grade) : ageBandFromAge(age)
   const myTopics = useMemo(
-    () => getCachedTopicsForAge(state.contentBank.topics, age),
-    [age, state.contentBank.topics],
+    () => getCachedTopicsForLearner(state.contentBank.topics, { age, grade }),
+    [age, grade, state.contentBank.topics],
   )
 
   if (!activeProfile) {
@@ -73,7 +80,8 @@ export function DashboardPage() {
               ¡Hola, {activeProfile.name}!
             </h1>
             <p className="text-lg font-bold text-ink-soft">
-              Nivel {activeProfile.level} · {formatAge(age)} · {ageBandLabel(band)}
+              Nivel {activeProfile.level} · {formatGrade(activeProfile.grade)} · {formatAge(birthAge)} ·{' '}
+              {ageBandLabel(band)}
             </p>
             <ProgressBar
               value={xpInfo.ratio}
@@ -144,7 +152,8 @@ export function DashboardPage() {
         <section className="mb-8 rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">
           <h2 className="font-display text-2xl font-bold">Temas para ti</h2>
           <p className="mt-1 font-semibold text-ink-soft">
-            Adaptados a tu edad ({formatAge(age)})
+            Adaptados a {formatGrade(activeProfile.grade)}
+            {age != null ? ` · ${formatAge(age)}` : ''}
           </p>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2">
             {myTopics.map((topic) => {

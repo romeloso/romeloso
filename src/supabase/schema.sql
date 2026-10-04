@@ -19,6 +19,7 @@ create table if not exists public.children_profiles (
   avatar_image text,
   accent text not null default '#ff6b6b',
   birth_date date,
+  school_grade smallint check (school_grade is null or school_grade between 0 and 6),
   level int not null default 1,
   xp int not null default 0,
   points int not null default 0,
@@ -149,6 +150,7 @@ create table if not exists public.avatar_library (
 -- Meta indexing: consultas frecuentes del panel y del juego
 create index if not exists idx_children_parent_id on public.children_profiles (parent_id);
 create index if not exists idx_children_birth_date on public.children_profiles (birth_date);
+create index if not exists idx_children_school_grade on public.children_profiles (school_grade);
 create index if not exists idx_children_updated_at on public.children_profiles (updated_at desc);
 
 create index if not exists idx_game_levels_game_order on public.game_levels (game_id, level_order);

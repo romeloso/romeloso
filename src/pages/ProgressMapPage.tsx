@@ -7,6 +7,7 @@ import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { getLevelProgress } from '@/domain/progress'
 import { ageFromBirthDate } from '@/lib/age'
+import { effectiveLearningAge } from '@/lib/grade'
 import { cn } from '@/lib/cn'
 
 function AdventurePath({
@@ -80,7 +81,8 @@ export function ProgressMapPage() {
 
   if (!activeProfile) return <Navigate to="/" replace />
 
-  const age = ageFromBirthDate(activeProfile.birthDate)
+  const age = effectiveLearningAge(ageFromBirthDate(activeProfile.birthDate), activeProfile.grade)
+  const grade = activeProfile.grade
 
   return (
     <PageShell wide>
@@ -89,13 +91,13 @@ export function ProgressMapPage() {
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <AdventurePath
           title="🔤 Sopa de letras"
-          levels={getWordSearchLevels(age)}
+          levels={getWordSearchLevels(age, grade)}
           progress={getGameProgress('wordsearch')}
           onOpen={() => navigate('/games/sopa-de-letras')}
         />
         <AdventurePath
           title="📚 Aventura de lectura"
-          levels={getAvailableReadingLevels(state.contentBank, age)}
+          levels={getAvailableReadingLevels(state.contentBank, age, grade)}
           progress={getGameProgress('reading')}
           onOpen={() => navigate('/games/aprende-a-leer')}
         />

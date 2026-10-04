@@ -11,6 +11,7 @@ const profile: ChildProfile = {
   avatarImage: '/avatars/photo/isabella-1.jpg',
   accent: '#0f9b8e',
   birthDate: '2019-03-15',
+  grade: 2,
   level: 2,
   xp: 10,
   points: 0,
@@ -27,6 +28,7 @@ describe('ProfileCard', () => {
     render(<ProfileCard profile={profile} onSelect={() => undefined} />)
     expect(screen.getByText('Mateo')).toBeInTheDocument()
     expect(screen.getByText(/Nivel 2/i)).toBeInTheDocument()
+    expect(screen.getByText(/2° grado/i)).toBeInTheDocument()
     expect(screen.getByText(/años/i)).toBeInTheDocument()
   })
 

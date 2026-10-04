@@ -18,7 +18,9 @@ import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
 import { ageFromBirthDate } from '@/lib/age'
+import { effectiveLearningAge, parseSchoolGrade } from '@/lib/grade'
 import { consumeRateLimit } from '@/lib/rateLimit'
+import type { SchoolGrade } from '@/types'
 import { invalidateContentCaches } from '@/services/cache/contentCache'
 import {
   createAdminPassage,
@@ -71,12 +73,13 @@ interface AppContextValue {
   addChildProfile: (input: {
     name: string
     birthDate?: string | null
+    grade?: SchoolGrade | null
     avatarImage?: string
     accent?: string
   }) => ChildProfile
   updateChildProfile: (
     profileId: string,
-    patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'avatarImage' | 'accent'>>,
+    patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'grade' | 'avatarImage' | 'accent'>>,
   ) => void
   removeChildProfile: (profileId: string) => void
   addWordMaterial: (input: {
@@ -86,6 +89,8 @@ interface AppContextValue {
     distractors: string[]
     minAge?: number
     maxAge?: number
+    minGrade?: number
+    maxGrade?: number
   }) => AdminWordItem
   addPassageMaterial: (input: {
     title: string
@@ -95,6 +100,8 @@ interface AppContextValue {
     answer: string
     minAge?: number
     maxAge?: number
+    minGrade?: number
+    maxGrade?: number
   }) => AdminPassageItem
   removeWordMaterial: (id: string) => void
   removePassageMaterial: (id: string) => void
@@ -104,6 +111,8 @@ interface AppContextValue {
     description: string
     minAge?: number
     maxAge?: number
+    minGrade?: number
+    maxGrade?: number
     reinforce?: boolean
   }) => StudyTopic
   removeStudyTopic: (id: string) => void
@@ -133,11 +142,12 @@ function migrateState(raw: AppState | null): AppState {
       ...(profiles[id] ?? createChildProfile({ name: profile.name || id })),
       ...profile,
       birthDate: profile.birthDate ?? seed?.birthDate ?? null,
+      grade: parseSchoolGrade(profile.grade ?? seed?.grade ?? null),
       avatarImage:
         isCustomUpload || isPhotoOrCartoon
           ? savedAvatar
           : (seed?.avatarImage ?? `/avatars/photo/${id}-1.jpg`),
-      accent: profile.accent ?? seed?.accent ?? '#0f9b8e',
+      accent: profile.accent ?? seed?.accent ?? '#6366F1',
     }
   }
 
@@ -154,13 +164,21 @@ function migrateState(raw: AppState | null): AppState {
       ...item,
       minAge: item.minAge ?? 3,
       maxAge: item.maxAge ?? 12,
+      minGrade: item.minGrade ?? 0,
+      maxGrade: item.maxGrade ?? 6,
     })),
     passages: (raw.contentBank?.passages ?? []).map((item) => ({
       ...item,
       minAge: item.minAge ?? 3,
       maxAge: item.maxAge ?? 12,
+      minGrade: item.minGrade ?? 0,
+      maxGrade: item.maxGrade ?? 6,
     })),
-    topics: raw.contentBank?.topics ?? [],
+    topics: (raw.contentBank?.topics ?? []).map((item) => ({
+      ...item,
+      minGrade: item.minGrade ?? 0,
+      maxGrade: item.maxGrade ?? 6,
+    })),
     avatarLibrary,
   }
 
@@ -297,14 +315,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const childProgress = state.progress[state.activeProfileId]
       if (!profile || !childProgress) return null
 
-      const age = ageFromBirthDate(profile.birthDate)
+      const age = effectiveLearningAge(ageFromBirthDate(profile.birthDate), profile.grade)
+      const grade = profile.grade
       const levels =
         result.gameId === 'reading'
-          ? getAvailableReadingLevels(state.contentBank, age)
+          ? getAvailableReadingLevels(state.contentBank, age, grade)
           : result.gameId === 'typing'
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
             : result.gameId === 'wordsearch'
-              ? getWordSearchLevels(age)
+              ? getWordSearchLevels(age, grade)
               : []
 
       const currentGameProgress = childProgress[result.gameId]
@@ -390,6 +409,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (input: {
       name: string
       birthDate?: string | null
+      grade?: SchoolGrade | null
       avatarImage?: string
       accent?: string
     }) => {
@@ -414,7 +434,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const updateChildProfile = useCallback(
     (
       profileId: string,
-      patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'avatarImage' | 'accent'>>,
+      patch: Partial<Pick<ChildProfile, 'name' | 'birthDate' | 'grade' | 'avatarImage' | 'accent'>>,
     ) => {
       setState((prev) => {
         const profile = prev.profiles[profileId]
@@ -460,6 +480,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       distractors: string[]
       minAge?: number
       maxAge?: number
+      minGrade?: number
+      maxGrade?: number
     }) => {
       const limit = consumeRateLimit('addContent')
       if (!limit.allowed) {
@@ -487,6 +509,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       answer: string
       minAge?: number
       maxAge?: number
+      minGrade?: number
+      maxGrade?: number
     }) => {
       const limit = consumeRateLimit('addContent')
       if (!limit.allowed) {
@@ -534,6 +558,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       description: string
       minAge?: number
       maxAge?: number
+      minGrade?: number
+      maxGrade?: number
       reinforce?: boolean
     }) => {
       const limit = consumeRateLimit('addContent')

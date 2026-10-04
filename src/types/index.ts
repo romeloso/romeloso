@@ -12,6 +12,9 @@ export type GameId =
 
 export type SessionRole = 'child' | 'admin'
 
+/** 0 = preescolar, 1–6 = grados de primaria. */
+export type SchoolGrade = 0 | 1 | 2 | 3 | 4 | 5 | 6
+
 export type ActivityKind =
   | 'letter_choice'
   | 'letter_from_image'
@@ -33,10 +36,13 @@ export interface ChildProfileSeed {
   avatarImage: string
   accent: string
   birthDate?: string | null
+  grade?: SchoolGrade | null
 }
 
 export interface ChildProfile extends ChildProfileSeed {
   birthDate: string | null
+  /** Grado escolar (0 preescolar … 6°). */
+  grade: SchoolGrade | null
   level: number
   xp: number
   points: number
@@ -285,6 +291,8 @@ export interface AdminWordItem {
   distractors: string[]
   minAge: number
   maxAge: number
+  minGrade: number
+  maxGrade: number
   createdAt: string
 }
 
@@ -297,10 +305,12 @@ export interface AdminPassageItem {
   answer: string
   minAge: number
   maxAge: number
+  minGrade: number
+  maxGrade: number
   createdAt: string
 }
 
-/** Temas de estudio/refuerzo por materia, adaptables por edad. */
+/** Temas de estudio/refuerzo por materia, adaptables por edad y grado. */
 export interface StudyTopic {
   id: string
   subjectId: GameId
@@ -308,6 +318,8 @@ export interface StudyTopic {
   description: string
   minAge: number
   maxAge: number
+  minGrade: number
+  maxGrade: number
   reinforce: boolean
   createdAt: string
 }

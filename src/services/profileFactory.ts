@@ -5,7 +5,7 @@ import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { createAvatarLibraryItem } from '@/services/contentService'
-import type { AppState, ChildProfile, ContentBank, GameId, GameProgress } from '@/types'
+import type { AppState, ChildProfile, ContentBank, GameId, GameProgress, SchoolGrade } from '@/types'
 
 function nowIso() {
   return new Date().toISOString()
@@ -19,6 +19,7 @@ export function createProfileFromSeed(seed: (typeof PROFILE_SEEDS)[number]): Chi
   return {
     ...seed,
     birthDate: seed.birthDate ?? null,
+    grade: seed.grade ?? null,
     level: 1,
     xp: 0,
     points: 0,
@@ -34,6 +35,7 @@ export function createProfileFromSeed(seed: (typeof PROFILE_SEEDS)[number]): Chi
 export function createChildProfile(input: {
   name: string
   birthDate?: string | null
+  grade?: SchoolGrade | null
   avatarImage?: string
   accent?: string
 }): ChildProfile {
@@ -50,6 +52,7 @@ export function createChildProfile(input: {
     avatarImage: input.avatarImage ?? defaultAvatarFor('isabella'),
     accent,
     birthDate: input.birthDate ?? null,
+    grade: input.grade ?? null,
     level: 1,
     xp: 0,
     points: 0,

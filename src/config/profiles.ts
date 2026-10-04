@@ -10,6 +10,7 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     avatarImage: defaultAvatarFor('isabella'),
     accent: '#EC4899',
     birthDate: null,
+    grade: null,
   },
   {
     id: 'sophia',
@@ -18,6 +19,7 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     avatarImage: defaultAvatarFor('sophia'),
     accent: '#F59E0B',
     birthDate: null,
+    grade: null,
   },
   {
     id: 'valentina',
@@ -26,6 +28,7 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
     avatarImage: defaultAvatarFor('valentina'),
     accent: '#3B82F6',
     birthDate: null,
+    grade: null,
   },
 ]
 
