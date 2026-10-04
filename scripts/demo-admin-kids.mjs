@@ -16,7 +16,7 @@ async function main() {
   await page.reload()
 
   await page.getByRole('button', { name: /Acceso Administrador/i }).click()
-  await page.getByPlaceholder('••••').fill('2468')
+  await page.getByPlaceholder('••••').fill('4716')
   await page.getByRole('button', { name: 'Entrar' }).click()
   await page.waitForURL('**/admin/panel')
 
