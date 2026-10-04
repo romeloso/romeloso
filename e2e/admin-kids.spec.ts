@@ -23,8 +23,8 @@ test.describe('Mis Juegos E2E', () => {
     await addForm.locator('input[type="date"]').fill('2018-08-20')
     await addForm.getByRole('button', { name: 'Guardar perfil' }).click()
     await expect(page.getByText(/Niño o niña agregado/i)).toBeVisible()
-    const elenaCard = page.locator('li', { has: page.getByDisplayValue('Elena') })
-    await expect(elenaCard.getByLabel(/Grado escolar/i)).toHaveValue('2')
+    const elenaCard = page.locator('li', { has: page.locator('input[value="Elena"]') })
+    await expect(elenaCard.locator('select').first()).toHaveValue('2')
 
     await page.getByRole('button', { name: 'Temas' }).click()
     await page.getByPlaceholder('Título del tema').fill('Rimas fáciles')
