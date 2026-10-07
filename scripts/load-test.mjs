@@ -1,5 +1,5 @@
 /**
- * Load test del cliente Mis Juegos.
+ * Load test del cliente Sorovagames.
  *
  * Escenario A — CPU: filtrar topics/lecciones + stringify estado liviano.
  * Escenario B — Persistencia: stringify estado con avatares base64 grandes (localStorage).

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { BrandLogo } from '@/components/brand/BrandLogo'
 import { Button } from '@/components/ui/Button'
+import { APP_CONFIG } from '@/config/app'
 import { useApp } from '@/context/AppContext'
 
 export function TopBar({
@@ -21,7 +22,7 @@ export function TopBar({
         type="button"
         className="text-left transition hover:opacity-90"
         onClick={() => navigate('/')}
-        aria-label="Sorova Games"
+        aria-label={APP_CONFIG.name}
       >
         <BrandLogo size="sm" />
       </button>

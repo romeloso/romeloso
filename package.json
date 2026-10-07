@@ -1,11 +1,12 @@
 {
-  "name": "mis-juegos",
+  "name": "sorovagames",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "start": "serve -s dist -l tcp://0.0.0.0:$PORT",
     "lint": "oxlint",
     "preview": "vite preview",
     "smoke": "node scripts/smoke.mjs",
@@ -22,6 +23,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.4",
+    "serve": "^14.2.6",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

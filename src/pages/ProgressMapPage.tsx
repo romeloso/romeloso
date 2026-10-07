@@ -2,6 +2,8 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { TopBar } from '@/components/layout/TopBar'
 import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
+import { getAvailableMathLevels } from '@/data/games/math/levels'
+import { getAvailableMemoryLevels } from '@/data/games/memory/levels'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
@@ -106,6 +108,18 @@ export function ProgressMapPage() {
           levels={TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)}
           progress={getGameProgress('typing')}
           onOpen={() => navigate('/games/teclea-como-una-experta')}
+        />
+        <AdventurePath
+          title="🔢 Aventura de matemáticas"
+          levels={getAvailableMathLevels(age, grade)}
+          progress={getGameProgress('math')}
+          onOpen={() => navigate('/games/matematicas')}
+        />
+        <AdventurePath
+          title="🧠 Aventura de memoria"
+          levels={getAvailableMemoryLevels(age, grade)}
+          progress={getGameProgress('memory')}
+          onOpen={() => navigate('/games/memoria')}
         />
       </div>
     </PageShell>

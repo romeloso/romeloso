@@ -6,12 +6,21 @@ import type {
   ActivityAttemptResult,
   LetterChoiceActivity,
   LetterFromImageActivity,
+  ReadingComprehensionActivity,
   ReadingPracticeActivity,
   SyllableBuildActivity,
   WordBuildActivity,
   WordQuizActivity,
   WordSelectActivity,
 } from '@/types'
+
+const GENRE_LABEL: Record<string, string> = {
+  cuento: 'Cuento',
+  informativa: 'Informativa',
+  poema: 'Poema',
+  dialogo: 'Diálogo',
+  fabula: 'Fábula',
+}
 
 type Resolve = (result: Omit<ActivityAttemptResult, 'activityId' | 'attempts'>) => void
 
@@ -415,6 +424,40 @@ function ReadingPracticeView({
   )
 }
 
+function ReadingComprehensionView({
+  activity,
+  onResolved,
+}: {
+  activity: ReadingComprehensionActivity
+  onResolved: Resolve
+}) {
+  const started = useMemo(() => Date.now(), [activity.id])
+
+  return (
+    <div className="space-y-5 text-center">
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <span className="rounded-full bg-violet/15 px-3 py-1 text-xs font-bold uppercase tracking-wide text-violet">
+          {GENRE_LABEL[activity.genre] ?? activity.genre}
+        </span>
+        <span className="font-display text-lg font-bold text-ink">{activity.passageTitle}</span>
+      </div>
+      <div className="whitespace-pre-line rounded-[1.75rem] bg-white px-5 py-5 text-left text-lg font-semibold leading-relaxed text-ink ring-1 ring-ink/10 sm:text-xl">
+        {activity.passage}
+      </div>
+      <p className="text-lg font-bold text-ink-soft">{activity.prompt}</p>
+      <ChoiceGrid
+        options={activity.options}
+        onPick={(value) =>
+          onResolved({
+            correct: value === activity.answer,
+            timeMs: Date.now() - started,
+          })
+        }
+      />
+    </div>
+  )
+}
+
 export function ReadingActivityView({
   activity,
   onResolved,
@@ -437,6 +480,8 @@ export function ReadingActivityView({
       return <WordQuizView key={activity.id} activity={activity} onResolved={onResolved} />
     case 'reading_practice':
       return <ReadingPracticeView key={activity.id} activity={activity} onResolved={onResolved} />
+    case 'reading_comprehension':
+      return <ReadingComprehensionView key={activity.id} activity={activity} onResolved={onResolved} />
     default:
       return <p>Esta actividad aún no está disponible.</p>
   }

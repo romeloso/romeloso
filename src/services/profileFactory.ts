@@ -1,6 +1,8 @@
 import { ACCENT_PALETTE, PROFILE_SEEDS } from '@/config/profiles'
 import { defaultAvatarFor, seedAvatarLibraryItems } from '@/config/avatars'
 import { createInitialGameProgress } from '@/domain/progress'
+import { getAvailableMathLevels } from '@/data/games/math/levels'
+import { getAvailableMemoryLevels } from '@/data/games/memory/levels'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
@@ -75,8 +77,8 @@ export function createDefaultProgressForChild(
       TYPING_LEVELS.filter((level) => level.lessonIds.length > 0),
     ),
     wordsearch: createInitialGameProgress('wordsearch', getWordSearchLevels()),
-    memory: createInitialGameProgress('memory', []),
-    math: createInitialGameProgress('math', []),
+    memory: createInitialGameProgress('memory', getAvailableMemoryLevels()),
+    math: createInitialGameProgress('math', getAvailableMathLevels()),
     science: createInitialGameProgress('science', []),
     english: createInitialGameProgress('english', []),
     creativity: createInitialGameProgress('creativity', []),

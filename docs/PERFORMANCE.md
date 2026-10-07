@@ -1,4 +1,4 @@
-# Rendimiento, caché y límites — Mis Juegos
+# Rendimiento, caché y límites — Sorovagames
 
 ## 1. Rate limiting
 

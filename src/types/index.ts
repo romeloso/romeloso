@@ -23,11 +23,15 @@ export type ActivityKind =
   | 'word_build'
   | 'word_quiz'
   | 'reading_practice'
+  | 'reading_comprehension'
+  | 'math_choice'
   | 'key_press'
   | 'home_row'
   | 'letter_race'
   | 'syllable_type'
   | 'word_type'
+
+export type ReadingGenre = 'cuento' | 'informativa' | 'poema' | 'dialogo' | 'fabula'
 
 export interface ChildProfileSeed {
   id: string
@@ -146,6 +150,24 @@ export interface ReadingPracticeActivity extends BaseActivity {
   hint?: string
 }
 
+/** Lectura con texto completo y pregunta de comprensión (puntuable). */
+export interface ReadingComprehensionActivity extends BaseActivity {
+  kind: 'reading_comprehension'
+  passageTitle: string
+  passage: string
+  genre: ReadingGenre
+  options: ChoiceOption[]
+  answer: string
+}
+
+/** Elección de respuesta numérica o de cálculo. */
+export interface MathChoiceActivity extends BaseActivity {
+  kind: 'math_choice'
+  expression: string
+  options: ChoiceOption[]
+  answer: string
+}
+
 export interface KeyPressActivity extends BaseActivity {
   kind: 'key_press'
   key: string
@@ -182,6 +204,8 @@ export type Activity =
   | WordBuildActivity
   | WordQuizActivity
   | ReadingPracticeActivity
+  | ReadingComprehensionActivity
+  | MathChoiceActivity
   | KeyPressActivity
   | HomeRowActivity
   | LetterRaceActivity
@@ -195,6 +219,11 @@ export interface LessonDefinition {
   title: string
   activities: Activity[]
   source?: 'builtin' | 'admin'
+  minAge?: number
+  maxAge?: number
+  minGrade?: number
+  maxGrade?: number
+  genre?: ReadingGenre
 }
 
 export interface LessonProgress {
@@ -242,7 +271,25 @@ export interface WordSearchStats {
   wordsFound: number
 }
 
-export type GameStats = ReadingStats | TypingStats | WordSearchStats | Record<string, never>
+export interface MathStats {
+  lessonsCompleted: number
+  correctAnswers: number
+  totalAnswers: number
+}
+
+export interface MemoryStats {
+  roundsCompleted: number
+  pairsFound: number
+  bestMoves: number
+}
+
+export type GameStats =
+  | ReadingStats
+  | TypingStats
+  | WordSearchStats
+  | MathStats
+  | MemoryStats
+  | Record<string, never>
 
 export interface AchievementDefinition {
   id: string
