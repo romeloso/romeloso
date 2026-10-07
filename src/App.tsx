@@ -9,6 +9,7 @@ import { LessonPage } from '@/pages/LessonPage'
 import { ProfileSelectPage } from '@/pages/ProfileSelectPage'
 import { ProgressMapPage } from '@/pages/ProgressMapPage'
 import { ResultPage } from '@/pages/ResultPage'
+import { MemoryPage } from '@/pages/MemoryPage'
 import { WordSearchPage } from '@/pages/WordSearchPage'
 
 export default function App() {
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/games/:gameSlug" element={<GameHubPage />} />
           <Route path="/games/:gameSlug/lesson/:lessonId" element={<LessonPage />} />
           <Route path="/games/sopa-de-letras/play/:puzzleId" element={<WordSearchPage />} />
+          <Route path="/games/memoria/play/:roundId" element={<MemoryPage />} />
           <Route path="/result" element={<ResultPage />} />
           <Route path="/admin" element={<AdminLoginPage />} />
           <Route path="/admin/panel" element={<AdminPanelPage />} />

@@ -5,8 +5,10 @@ import { TopBar } from '@/components/layout/TopBar'
 import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
 import { getGameBySlug } from '@/data/games/registry'
+import { getMathLesson } from '@/data/games/math/levels'
 import { getReadingLesson } from '@/data/games/reading/levels'
 import { getTypingLesson } from '@/data/games/typing/levels'
+import { MathActivityView } from '@/games/math/MathActivities'
 import { ReadingActivityView } from '@/games/reading/ReadingActivities'
 import { TypingActivityView } from '@/games/typing/TypingActivities'
 import { ageFromBirthDate } from '@/lib/age'
@@ -55,6 +57,7 @@ export function LessonPage() {
     if (!lessonId || !game) return undefined
     if (game.id === 'reading') return getReadingLesson(lessonId, state.contentBank, age, grade)
     if (game.id === 'typing') return getTypingLesson(lessonId)
+    if (game.id === 'math') return getMathLesson(lessonId, age, grade)
     return undefined
   }, [age, game, grade, lessonId, state.contentBank])
 
@@ -81,6 +84,8 @@ export function LessonPage() {
         renderActivity={({ activity, onResolved }) =>
           game.id === 'reading' ? (
             <ReadingActivityView activity={activity} onResolved={onResolved} />
+          ) : game.id === 'math' ? (
+            <MathActivityView activity={activity} onResolved={onResolved} />
           ) : (
             <TypingActivityView activity={activity} onResolved={onResolved} />
           )

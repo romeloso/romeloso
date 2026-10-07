@@ -7,6 +7,8 @@ import type {
   LessonProgress,
   LessonSessionResult,
   LevelProgress,
+  MathStats,
+  MemoryStats,
   ReadingStats,
   TypingStats,
 } from '@/types'
@@ -29,6 +31,22 @@ export function createEmptyTypingStats(): TypingStats {
     lessonsCompleted: 0,
     totalKeystrokes: 0,
     correctKeystrokes: 0,
+  }
+}
+
+export function createEmptyMathStats(): MathStats {
+  return {
+    lessonsCompleted: 0,
+    correctAnswers: 0,
+    totalAnswers: 0,
+  }
+}
+
+export function createEmptyMemoryStats(): MemoryStats {
+  return {
+    roundsCompleted: 0,
+    pairsFound: 0,
+    bestMoves: 0,
   }
 }
 
@@ -63,7 +81,11 @@ export function createInitialGameProgress(
           ? createEmptyTypingStats()
           : gameId === 'wordsearch'
             ? { puzzlesCompleted: 0, wordsFound: 0 }
-            : {},
+            : gameId === 'math'
+              ? createEmptyMathStats()
+              : gameId === 'memory'
+                ? createEmptyMemoryStats()
+                : {},
   }
 }
 
@@ -223,6 +245,26 @@ export function applyLessonResult(
       puzzlesCompleted: (current.puzzlesCompleted ?? 0) + 1,
       wordsFound: (current.wordsFound ?? 0) + (result.words?.length ?? 0),
     }
+  }
+
+  if (result.gameId === 'math') {
+    const math = { ...(stats as MathStats) }
+    math.lessonsCompleted += 1
+    math.correctAnswers += result.results.filter((item) => item.correct).length
+    math.totalAnswers += result.results.length
+    stats = math
+  }
+
+  if (result.gameId === 'memory') {
+    const memory = { ...(stats as MemoryStats) }
+    const pairs = result.words?.length ?? 0
+    memory.roundsCompleted += 1
+    memory.pairsFound += pairs
+    const moves = pairs > 0 ? Math.round(pairs / Math.max(result.accuracy, 0.01)) : 0
+    if (moves > 0) {
+      memory.bestMoves = memory.bestMoves === 0 ? moves : Math.min(memory.bestMoves, moves)
+    }
+    stats = memory
   }
 
   void lessons

@@ -1,5 +1,7 @@
 import type { ContentBank, GameLevelMeta, LessonDefinition, SchoolGrade } from '@/types'
+import { contentFitsLearner } from '@/lib/grade'
 import { READING_LESSONS } from './content'
+import { READING_PASSAGE_LESSONS } from './passages'
 import { READING_QUIZ_AND_PRACTICE_LESSONS } from './quizContent'
 import { getCachedAdminReadingLessons } from '@/services/cache/contentCache'
 
@@ -74,12 +76,69 @@ export const READING_LEVELS: GameLevelMeta[] = [
     title: 'Historias',
     subtitle: 'Lee y responde preguntas',
     icon: '📖',
-    lessonIds: ['reading-l8-a', 'reading-admin-passages'],
+    lessonIds: [
+      'reading-l8-a',
+      'reading-pass-early-cuento',
+      'reading-pass-early-info',
+      'reading-pass-early-poema',
+      'reading-pass-early-dialogo',
+      'reading-pass-mid-cuento',
+      'reading-pass-mid-info',
+      'reading-pass-mid-fabula',
+      'reading-admin-passages',
+    ],
+  },
+  {
+    id: 'reading-l9',
+    gameId: 'reading',
+    order: 9,
+    title: 'Lecturas por grado',
+    subtitle: 'Cuentos, textos e ideas con puntuación',
+    icon: '📚',
+    lessonIds: [
+      'reading-pass-mid-dialogo',
+      'reading-pass-upper-cuento',
+      'reading-pass-upper-info',
+      'reading-pass-upper-poema',
+      'reading-pass-upper-fabula',
+      'reading-pass-upper-dialogo',
+    ],
   },
 ]
 
-export function getBuiltinReadingLessons(): LessonDefinition[] {
-  return [...READING_LESSONS, ...READING_QUIZ_AND_PRACTICE_LESSONS]
+function lessonFitsLearner(
+  lesson: LessonDefinition,
+  learner: { age: number | null; grade: SchoolGrade | null },
+) {
+  if (
+    lesson.minAge == null &&
+    lesson.maxAge == null &&
+    lesson.minGrade == null &&
+    lesson.maxGrade == null
+  ) {
+    return true
+  }
+  return contentFitsLearner(
+    {
+      minAge: lesson.minAge ?? 0,
+      maxAge: lesson.maxAge ?? 99,
+      minGrade: lesson.minGrade,
+      maxGrade: lesson.maxGrade,
+    },
+    learner,
+  )
+}
+
+export function getBuiltinReadingLessons(
+  age: number | null = null,
+  grade: SchoolGrade | null = null,
+): LessonDefinition[] {
+  const learner = { age, grade }
+  return [
+    ...READING_LESSONS,
+    ...READING_QUIZ_AND_PRACTICE_LESSONS,
+    ...READING_PASSAGE_LESSONS,
+  ].filter((lesson) => lessonFitsLearner(lesson, learner))
 }
 
 export function getReadingLessons(
@@ -89,7 +148,7 @@ export function getReadingLessons(
 ): LessonDefinition[] {
   const adminLessons = bank ? getCachedAdminReadingLessons(bank, age, grade) : []
   const adminIds = new Set(adminLessons.map((lesson) => lesson.id))
-  const builtin = getBuiltinReadingLessons().filter((lesson) => !adminIds.has(lesson.id))
+  const builtin = getBuiltinReadingLessons(age, grade).filter((lesson) => !adminIds.has(lesson.id))
   return [...builtin, ...adminLessons]
 }
 

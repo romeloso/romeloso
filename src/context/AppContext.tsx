@@ -11,6 +11,8 @@ import { APP_CONFIG } from '@/config/app'
 import { seedAvatarLibraryItems } from '@/config/avatars'
 import { ADMIN_CONFIG, PROFILE_SEEDS } from '@/config/profiles'
 import { evaluateAchievements } from '@/data/achievements'
+import { getAvailableMathLevels } from '@/data/games/math/levels'
+import { getAvailableMemoryLevels } from '@/data/games/memory/levels'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
@@ -185,6 +187,8 @@ function migrateState(raw: AppState | null): AppState {
   const readingLevels = getAvailableReadingLevels(contentBank)
   const typingLevels = TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
   const wordsearchLevels = getWordSearchLevels()
+  const mathLevels = getAvailableMathLevels()
+  const memoryLevels = getAvailableMemoryLevels()
 
   const progressEntries = Object.entries(raw.progress ?? {}).map(([childId, games]) => {
     const defaults = createDefaultProgressForChild(contentBank)
@@ -200,6 +204,8 @@ function migrateState(raw: AppState | null): AppState {
     } else {
       merged.wordsearch = defaults.wordsearch
     }
+    merged.math = syncGameProgressWithLevels(merged.math ?? defaults.math, mathLevels)
+    merged.memory = syncGameProgressWithLevels(merged.memory ?? defaults.memory, memoryLevels)
     return [childId, merged] as const
   })
 
@@ -324,7 +330,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
             : result.gameId === 'wordsearch'
               ? getWordSearchLevels(age, grade)
-              : []
+              : result.gameId === 'math'
+                ? getAvailableMathLevels(age, grade)
+                : result.gameId === 'memory'
+                  ? getAvailableMemoryLevels(age, grade)
+                  : []
 
       const currentGameProgress = childProgress[result.gameId]
       const nextGameProgress = applyLessonResult(currentGameProgress, levels, [], result)
