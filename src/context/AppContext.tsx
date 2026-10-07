@@ -10,6 +10,7 @@ import {
 import { APP_CONFIG } from '@/config/app'
 import { seedAvatarLibraryItems } from '@/config/avatars'
 import { ADMIN_CONFIG, PROFILE_SEEDS } from '@/config/profiles'
+import { SEED_PASSAGES, SEED_TOPICS, SEED_WORDS } from '@/data/content/seed'
 import { evaluateAchievements } from '@/data/achievements'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
@@ -29,6 +30,7 @@ import {
   createStudyTopic,
 } from '@/services/contentService'
 import {
+  APP_STATE_VERSION,
   createChildProfile,
   createDefaultProgressForChild,
   createInitialAppState,
@@ -43,6 +45,8 @@ import type {
   AppState,
   AvatarLibraryItem,
   ChildProfile,
+  ColorTheme,
+  ContentBank,
   GameId,
   GameProgress,
   LessonSessionResult,
@@ -66,6 +70,7 @@ interface AppContextValue {
   loginAdmin: (pin: string) => { ok: boolean; error?: string }
   logoutAdmin: () => void
   toggleSound: () => void
+  toggleTheme: () => void
   getGameProgress: (gameId: GameId, profileId?: string) => GameProgress | null
   completeLesson: (result: LessonSessionResult) => CompleteLessonResponse | null
   resetAllProgress: () => void
@@ -122,6 +127,21 @@ interface AppContextValue {
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
+
+function parseTheme(value: unknown): ColorTheme {
+  return value === 'light' ? 'light' : 'dark'
+}
+
+/** Rellena colecciones vacías solo al pasar a la versión 4. */
+function seedEmptyCollections(bank: ContentBank, previousVersion: number): ContentBank {
+  if (previousVersion >= APP_STATE_VERSION) return bank
+  return {
+    ...bank,
+    words: bank.words.length > 0 ? bank.words : SEED_WORDS,
+    passages: bank.passages.length > 0 ? bank.passages : SEED_PASSAGES,
+    topics: bank.topics.length > 0 ? bank.topics : SEED_TOPICS,
+  }
+}
 
 function migrateState(raw: AppState | null): AppState {
   const base = createInitialAppState(APP_CONFIG.defaultSoundEnabled)
@@ -181,13 +201,14 @@ function migrateState(raw: AppState | null): AppState {
     })),
     avatarLibrary,
   }
+  const seededBank = seedEmptyCollections(contentBank, raw.version ?? 0)
 
-  const readingLevels = getAvailableReadingLevels(contentBank)
+  const readingLevels = getAvailableReadingLevels(seededBank)
   const typingLevels = TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
   const wordsearchLevels = getWordSearchLevels()
 
   const progressEntries = Object.entries(raw.progress ?? {}).map(([childId, games]) => {
-    const defaults = createDefaultProgressForChild(contentBank)
+    const defaults = createDefaultProgressForChild(seededBank)
     const merged = { ...defaults, ...games } as Record<GameId, GameProgress>
     if (merged.reading) {
       merged.reading = syncGameProgressWithLevels(merged.reading, readingLevels)
@@ -206,9 +227,10 @@ function migrateState(raw: AppState | null): AppState {
   return {
     ...base,
     ...raw,
-    version: 3,
+    version: APP_STATE_VERSION,
+    theme: parseTheme(raw.theme),
     sessionRole: (raw.sessionRole as SessionRole | undefined) ?? 'child',
-    contentBank,
+    contentBank: seededBank,
     profiles,
     progress: {
       ...base.progress,
@@ -245,6 +267,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!ready) return
     localAppStore.save(state)
   }, [state, ready])
+
+  useEffect(() => {
+    if (!ready) return
+    document.documentElement.classList.toggle('dark', state.theme === 'dark')
+    document.documentElement.style.colorScheme = state.theme
+  }, [ready, state.theme])
 
   const activeProfile = useMemo(() => {
     if (!state.activeProfileId) return null
@@ -290,6 +318,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleSound = useCallback(() => {
     setState((prev) => ({ ...prev, soundEnabled: !prev.soundEnabled }))
+  }, [])
+
+  const toggleTheme = useCallback(() => {
+    setState((prev) => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }))
   }, [])
 
   const playSound = useCallback(
@@ -378,7 +410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   const resetAllProgress = useCallback(() => {
-    const fresh = createInitialAppState(state.soundEnabled)
+    const fresh = createInitialAppState(state.soundEnabled, state.theme)
     setState({
       ...fresh,
       contentBank: state.contentBank,
@@ -403,7 +435,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       ),
     })
     setRecentResults([])
-  }, [state.contentBank, state.profiles, state.soundEnabled])
+  }, [state.contentBank, state.profiles, state.soundEnabled, state.theme])
 
   const addChildProfile = useCallback(
     (input: {
@@ -646,6 +678,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginAdmin,
       logoutAdmin,
       toggleSound,
+      toggleTheme,
       getGameProgress,
       completeLesson,
       resetAllProgress,
@@ -673,6 +706,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loginAdmin,
       logoutAdmin,
       toggleSound,
+      toggleTheme,
       getGameProgress,
       completeLesson,
       resetAllProgress,
