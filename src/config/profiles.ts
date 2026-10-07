@@ -33,13 +33,14 @@ export const PROFILE_SEEDS: ChildProfileSeed[] = [
 ]
 
 export const ACCENT_PALETTE = [
-  '#EC4899',
-  '#6366F1',
+  '#F472B6',
   '#3B82F6',
+  '#06B6D4',
   '#10B981',
   '#F59E0B',
   '#8B5CF6',
   '#FDE047',
+  '#1E3A8A',
 ] as const
 
 /** Acceso al módulo administrador (MVP local). */

@@ -32,8 +32,8 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Aprende el teclado, gana precisión y velocidad.',
     icon: '⌨️',
     status: 'available',
-    accent: BRAND_COLORS.indigo,
-    totalLevels: 9,
+    accent: BRAND_COLORS.sky,
+    totalLevels: 8,
   },
   {
     id: 'memory',
@@ -43,7 +43,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Entrena tu memoria con retos divertidos.',
     icon: '🧠',
     status: 'available',
-    accent: BRAND_COLORS.violet,
+    accent: BRAND_COLORS.cyan,
     totalLevels: 3,
   },
   {
@@ -87,7 +87,7 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
     description: 'Colorea, inventa y expresa ideas.',
     icon: '🎨',
     status: 'coming_soon',
-    accent: BRAND_COLORS.pink,
+    accent: BRAND_COLORS.violet,
     totalLevels: 0,
   },
 ]

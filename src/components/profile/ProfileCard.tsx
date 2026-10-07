@@ -18,7 +18,7 @@ export function ProfileCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group flex w-full flex-col items-center gap-3 rounded-[2rem] bg-white/85 p-6 text-center shadow-[0_10px_30px_rgba(31,42,55,0.08)] ring-2 ring-transparent transition hover:-translate-y-1 hover:ring-teal/40',
+        'group flex w-full flex-col items-center gap-3 rounded-[2rem] bg-white/92 p-6 text-center shadow-[0_8px_0_rgba(30,58,138,0.12),0_16px_32px_rgba(59,130,246,0.14)] ring-2 ring-transparent transition hover:-translate-y-1 hover:ring-sky/40',
       )}
     >
       <Avatar

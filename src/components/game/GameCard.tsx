@@ -18,12 +18,16 @@ export function GameCard({
       disabled={locked}
       onClick={onClick}
       className={cn(
-        'relative flex min-h-44 w-full flex-col items-start justify-between rounded-[1.75rem] p-5 text-left transition',
+        'relative flex min-h-44 w-full flex-col items-start justify-between rounded-[1.85rem] p-5 text-left transition',
         locked
           ? 'cursor-not-allowed bg-white/55 opacity-80'
-          : 'bg-white/90 shadow-[0_12px_28px_rgba(31,42,55,0.1)] hover:-translate-y-1',
+          : 'bg-white/92 hover:-translate-y-1',
       )}
-      style={{ boxShadow: locked ? undefined : `0 12px 28px ${game.accent}33` }}
+      style={{
+        boxShadow: locked
+          ? undefined
+          : `0 8px 0 ${game.accent}55, 0 16px 32px ${game.accent}33, inset 0 1px 0 rgba(255,255,255,0.7)`,
+      }}
     >
       <div className="flex w-full items-start justify-between gap-3">
         <span className="text-5xl" aria-hidden="true">

@@ -7,6 +7,7 @@ import { AvatarUploader } from '@/components/profile/AvatarUploader'
 import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { IconCoin, IconFlame, IconStar, IconTrophy } from '@/components/brand/BrandIcons'
 import { StatPill } from '@/components/ui/StatPill'
 import { useApp } from '@/context/AppContext'
 import { GAME_DEFINITIONS } from '@/data/games/registry'
@@ -141,10 +142,18 @@ export function DashboardPage() {
         ) : null}
 
         <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatPill icon="⭐" label="XP" value={formatNumber(activeProfile.xp)} />
-          <StatPill icon="🪙" label="Monedas" value={formatNumber(activeProfile.coins)} />
-          <StatPill icon="🔥" label="Racha" value={`${activeProfile.streakDays} días`} />
-          <StatPill icon="🏆" label="Logros" value={ownedAchievements.length} />
+          <StatPill icon={<IconStar size={22} />} label="XP" value={formatNumber(activeProfile.xp)} />
+          <StatPill
+            icon={<IconCoin size={22} />}
+            label="Monedas"
+            value={formatNumber(activeProfile.coins)}
+          />
+          <StatPill
+            icon={<IconFlame size={22} />}
+            label="Racha"
+            value={`${activeProfile.streakDays} días`}
+          />
+          <StatPill icon={<IconTrophy size={22} />} label="Logros" value={ownedAchievements.length} />
         </div>
       </section>
 
