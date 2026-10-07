@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/Button'
 import { PageShell } from '@/components/ui/PageShell'
 import { useApp } from '@/context/AppContext'
 import { getGameBySlug } from '@/data/games/registry'
+import { getAvailableMathLevels, getMathLesson } from '@/data/games/math/levels'
+import { getAvailableMemoryLevels, getMemoryLessons } from '@/data/games/memory/levels'
 import { getAvailableReadingLevels, getReadingLesson } from '@/data/games/reading/levels'
 import { TYPING_LEVELS, getTypingLesson } from '@/data/games/typing/levels'
 import { getWordSearchLevels, getWordSearchLesson } from '@/data/games/wordsearch/levels'
@@ -47,7 +49,7 @@ export function GameHubPage() {
           <p className="text-6xl">{game.icon}</p>
           <h1 className="mt-4 font-display text-4xl font-bold">{game.title}</h1>
           <p className="mt-3 text-lg font-semibold text-ink-soft">
-            Este juego llegará pronto. ¡Mientras tanto practica lectura, tecleo o sopa de letras!
+            Este juego llegará pronto. ¡Mientras tanto practica lectura, mates, memoria o sopa de letras!
           </p>
           {subjectTopics.length > 0 ? (
             <div className="mx-auto mt-6 max-w-lg rounded-2xl bg-sand/70 p-4 text-left">
@@ -76,8 +78,13 @@ export function GameHubPage() {
         ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
         : game.id === 'wordsearch'
           ? getWordSearchLevels(age, grade)
-          : []
+          : game.id === 'math'
+            ? getAvailableMathLevels(age, grade)
+            : game.id === 'memory'
+              ? getAvailableMemoryLevels(age, grade)
+              : []
   const progress = getGameProgress(game.id)
+  const memoryLessons = game.id === 'memory' ? getMemoryLessons(age, grade) : []
 
   return (
     <PageShell>
@@ -146,10 +153,14 @@ export function GameHubPage() {
                 {level.lessonIds.map((lessonId) => {
                   const lesson =
                     game.id === 'reading'
-                      ? getReadingLesson(lessonId, state.contentBank, age)
+                      ? getReadingLesson(lessonId, state.contentBank, age, grade)
                       : game.id === 'typing'
                         ? getTypingLesson(lessonId)
-                        : getWordSearchLesson(lessonId)
+                        : game.id === 'math'
+                          ? getMathLesson(lessonId, age, grade)
+                          : game.id === 'memory'
+                            ? memoryLessons.find((item) => item.id === lessonId)
+                            : getWordSearchLesson(lessonId)
                   const lessonProgress = progress?.lessonProgress[lessonId]
                   const lessonUnlocked = Boolean(lessonProgress?.unlocked) && unlocked
 
@@ -161,6 +172,10 @@ export function GameHubPage() {
                       onClick={() => {
                         if (game.id === 'wordsearch') {
                           navigate(`/games/sopa-de-letras/play/${lessonId}`)
+                          return
+                        }
+                        if (game.id === 'memory') {
+                          navigate(`/games/memoria/play/${lessonId}`)
                           return
                         }
                         navigate(`/games/${game.slug}/lesson/${lessonId}`)
