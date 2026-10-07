@@ -28,8 +28,14 @@ export class LocalAppStore implements AppStoreRepository {
   load(): AppState | null {
     try {
       const raw = localStorage.getItem(this.key)
-      if (!raw) return null
-      return JSON.parse(raw) as AppState
+      if (raw) return JSON.parse(raw) as AppState
+
+      // Migración desde el nombre anterior de la app.
+      const legacy = localStorage.getItem('mis-juegos.v1')
+      if (!legacy) return null
+      localStorage.setItem(this.key, legacy)
+      localStorage.removeItem('mis-juegos.v1')
+      return JSON.parse(legacy) as AppState
     } catch {
       return null
     }

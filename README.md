@@ -1,6 +1,6 @@
-# Sorova Games
+# Sorovagames
 
-Plataforma educativa infantil (**Sorova Games**).
+Plataforma educativa infantil (**Sorovagames**).
 
 **Aprender es una aventura.**
 
@@ -17,7 +17,7 @@ Plataforma educativa infantil (**Sorova Games**).
 - Recompensas, logros y mapa de aventura
 - Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
 
-El nombre de la app se cambia en `src/config/app.ts`.
+El nombre de la app se cambia en `src/config/app.ts` (`APP_CONFIG.name` / `slug`).
 
 ## Stack
 

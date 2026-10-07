@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Mis Juegos E2E', () => {
+test.describe('Sorovagames E2E', () => {
   test('admin agrega niño, tema y el dashboard adapta por edad', async ({ page }) => {
     await page.goto('/')
     await page.evaluate(() => {
       localStorage.clear()
-      sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+      sessionStorage.setItem('sorovagames.lobby-intro.seen', '1')
     })
     await page.reload()
 
@@ -45,7 +45,7 @@ test.describe('Mis Juegos E2E', () => {
     await page.goto('/admin')
     await page.evaluate(() => {
       localStorage.clear()
-      sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+      sessionStorage.setItem('sorovagames.lobby-intro.seen', '1')
     })
     await page.reload()
 

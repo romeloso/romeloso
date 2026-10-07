@@ -1,10 +1,11 @@
-/** Configuración central de marca Sorova Games. */
+/** Configuración central de marca Sorovagames. */
 export const APP_CONFIG = {
-  name: 'Sorova Games',
+  name: 'Sorovagames',
+  slug: 'sorovagames',
   tagline: 'Aprender es una aventura',
   slogan: 'Grandes sueños, pequeños logros',
   version: '0.2.0',
-  storageKey: 'mis-juegos.v1',
+  storageKey: 'sorovagames.v1',
   unlockThreshold: 0.7,
   xpPerLevelBase: 100,
   defaultSoundEnabled: true,

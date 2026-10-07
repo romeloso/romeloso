@@ -9,20 +9,20 @@ async function clickVirtualKey(page, key) {
 }
 
 async function main() {
-  mkdirSync('/tmp/mis-juegos-video', { recursive: true })
+  mkdirSync('/tmp/sorovagames-video', { recursive: true })
   mkdirSync('/opt/cursor/artifacts/screenshots', { recursive: true })
 
   const browser = await chromium.launch({ headless: true })
   const context = await browser.newContext({
     viewport: { width: 1280, height: 800 },
-    recordVideo: { dir: '/tmp/mis-juegos-video', size: { width: 1280, height: 800 } },
+    recordVideo: { dir: '/tmp/sorovagames-video', size: { width: 1280, height: 800 } },
   })
   const page = await context.newPage()
 
   await page.goto(base)
   await page.evaluate(() => {
     localStorage.clear()
-    sessionStorage.setItem('sorova.lobby-intro.seen', '1')
+    sessionStorage.setItem('sorovagames.lobby-intro.seen', '1')
   })
   await page.reload()
   await page.screenshot({ path: '/opt/cursor/artifacts/screenshots/profiles.png', fullPage: true })
@@ -75,7 +75,7 @@ async function main() {
 
   if (video) {
     const videoPath = await video.path()
-    const target = `/opt/cursor/artifacts/mis_juegos_demo_lectura_y_tecleo.webm`
+    const target = `/opt/cursor/artifacts/sorovagames_demo_lectura_y_tecleo.webm`
     copyFileSync(videoPath, target)
     console.log('SMOKE_OK', { video: target, file: basename(videoPath) })
   } else {

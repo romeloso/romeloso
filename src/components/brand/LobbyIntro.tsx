@@ -5,7 +5,7 @@ import { SmilingStar } from '@/components/brand/SmilingStar'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 
-const INTRO_KEY = 'sorova.lobby-intro.seen'
+const INTRO_KEY = 'sorovagames.lobby-intro.seen'
 
 const CONFETTI = [
   { color: BRAND_COLORS.pink, left: '12%', delay: '0.1s', top: '18%' },
@@ -18,7 +18,13 @@ const CONFETTI = [
 
 export function shouldShowLobbyIntro() {
   try {
-    return sessionStorage.getItem(INTRO_KEY) !== '1'
+    if (sessionStorage.getItem(INTRO_KEY) === '1') return false
+    // Compat con la clave anterior del intro.
+    if (sessionStorage.getItem('sorova.lobby-intro.seen') === '1') {
+      sessionStorage.setItem(INTRO_KEY, '1')
+      return false
+    }
+    return true
   } catch {
     return true
   }
@@ -27,6 +33,7 @@ export function shouldShowLobbyIntro() {
 export function markLobbyIntroSeen() {
   try {
     sessionStorage.setItem(INTRO_KEY, '1')
+    sessionStorage.removeItem('sorova.lobby-intro.seen')
   } catch {
     /* ignore */
   }
@@ -59,7 +66,7 @@ export function LobbyIntro({ onDone }: { onDone: () => void }) {
           'radial-gradient(circle at 20% 20%, #e0e7ff 0%, transparent 40%), radial-gradient(circle at 80% 15%, #fce7f3 0%, transparent 35%), radial-gradient(circle at 70% 80%, #d1fae5 0%, transparent 40%), linear-gradient(180deg, #ffffff 0%, #eef2ff 100%)',
       }}
       role="dialog"
-      aria-label="Introducción Sorova Games"
+      aria-label={`Introducción ${APP_CONFIG.name}`}
     >
       {CONFETTI.map((item, index) => (
         <span
@@ -89,7 +96,7 @@ export function LobbyIntro({ onDone }: { onDone: () => void }) {
         >
           <img
             src={APP_CONFIG.brandImage}
-            alt="Línea gráfica Sorova Games"
+            alt={`Línea gráfica ${APP_CONFIG.name}`}
             className="h-44 w-full object-cover object-[50%_18%] sm:h-56"
           />
         </div>
