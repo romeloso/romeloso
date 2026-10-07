@@ -35,6 +35,7 @@ import {
   emptyContentBank,
 } from '@/services/profileFactory'
 import { localAppStore } from '@/services/storage/localStore'
+import { loadRemoteState, saveRemoteState } from '@/services/storage/remoteStore'
 import { soundService } from '@/services/soundService'
 import type {
   AdaptiveHint,
@@ -236,14 +237,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [recentResults, setRecentResults] = useState<LessonSessionResult[]>([])
 
   useEffect(() => {
-    const loaded = migrateState(localAppStore.load())
-    setState(loaded)
-    setReady(true)
+    let cancelled = false
+    void (async () => {
+      const remote = await loadRemoteState()
+      const loaded = migrateState(remote ?? localAppStore.load())
+      if (cancelled) return
+      setState(loaded)
+      setReady(true)
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
     if (!ready) return
     localAppStore.save(state)
+    saveRemoteState(state)
   }, [state, ready])
 
   const activeProfile = useMemo(() => {
