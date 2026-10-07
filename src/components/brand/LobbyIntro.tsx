@@ -7,19 +7,17 @@ import { cn } from '@/lib/cn'
 
 const INTRO_KEY = 'sorovagames.lobby-intro.seen'
 
-const CONFETTI = [
-  { color: BRAND_COLORS.pink, left: '12%', delay: '0.1s', top: '18%' },
-  { color: BRAND_COLORS.sky, left: '22%', delay: '0.25s', top: '28%' },
-  { color: BRAND_COLORS.amber, left: '78%', delay: '0.15s', top: '16%' },
-  { color: BRAND_COLORS.emerald, left: '86%', delay: '0.35s', top: '30%' },
-  { color: BRAND_COLORS.violet, left: '68%', delay: '0.45s', top: '22%' },
-  { color: BRAND_COLORS.yellow, left: '40%', delay: '0.2s', top: '12%' },
+const SPLASHES = [
+  { color: BRAND_COLORS.pink, left: '8%', top: '16%', delay: '0.05s', size: '4.5rem' },
+  { color: BRAND_COLORS.cyan, left: '84%', top: '18%', delay: '0.2s', size: '3.5rem' },
+  { color: BRAND_COLORS.violet, left: '78%', top: '72%', delay: '0.3s', size: '4rem' },
+  { color: BRAND_COLORS.yellow, left: '12%', top: '70%', delay: '0.15s', size: '3rem' },
+  { color: BRAND_COLORS.emerald, left: '48%', top: '10%', delay: '0.25s', size: '2.5rem' },
 ]
 
 export function shouldShowLobbyIntro() {
   try {
     if (sessionStorage.getItem(INTRO_KEY) === '1') return false
-    // Compat con la clave anterior del intro.
     if (sessionStorage.getItem('sorova.lobby-intro.seen') === '1') {
       sessionStorage.setItem(INTRO_KEY, '1')
       return false
@@ -44,7 +42,7 @@ export function LobbyIntro({ onDone }: { onDone: () => void }) {
   const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setReady(true), 1600)
+    const timer = window.setTimeout(() => setReady(true), 1400)
     return () => window.clearTimeout(timer)
   }, [])
 
@@ -63,59 +61,50 @@ export function LobbyIntro({ onDone }: { onDone: () => void }) {
       )}
       style={{
         background:
-          'radial-gradient(circle at 20% 20%, #e0e7ff 0%, transparent 40%), radial-gradient(circle at 80% 15%, #fce7f3 0%, transparent 35%), radial-gradient(circle at 70% 80%, #d1fae5 0%, transparent 40%), linear-gradient(180deg, #ffffff 0%, #eef2ff 100%)',
+          'radial-gradient(circle at 20% 20%, rgba(253,224,71,0.45) 0%, transparent 38%), radial-gradient(circle at 85% 15%, rgba(244,114,182,0.35) 0%, transparent 34%), radial-gradient(circle at 70% 85%, rgba(6,182,212,0.3) 0%, transparent 40%), linear-gradient(180deg, #dbeafe 0%, #f0f9ff 55%, #ffffff 100%)',
       }}
       role="dialog"
       aria-label={`Introducción ${APP_CONFIG.name}`}
     >
-      {CONFETTI.map((item, index) => (
+      {SPLASHES.map((item, index) => (
         <span
           key={index}
-          className="animate-confetti pointer-events-none absolute h-3 w-8 rounded-full"
+          className="animate-blob pointer-events-none absolute rounded-full opacity-70 blur-[1px]"
           style={{
-            backgroundColor: item.color,
+            background: `radial-gradient(circle at 30% 30%, #fff8, transparent 55%), ${item.color}`,
             left: item.left,
             top: item.top,
+            width: item.size,
+            height: item.size,
             animationDelay: item.delay,
           }}
         />
       ))}
 
-      <div className="relative z-10 flex w-full max-w-xl flex-col items-center text-center">
-        <div className="animate-star-fly mb-2">
-          <SmilingStar size={88} />
+      <div className="relative z-10 flex w-full max-w-2xl flex-col items-center text-center">
+        <div className="animate-star-fly mb-1">
+          <SmilingStar size={96} />
         </div>
 
         <div className="animate-logo-pop">
           <BrandLogo size="hero" showTagline />
         </div>
 
-        <div
-          className="animate-fade-up mt-6 w-full overflow-hidden rounded-[2rem] shadow-[0_20px_50px_rgba(15,23,42,0.18)] ring-4 ring-white"
-          style={{ animationDelay: '0.55s' }}
-        >
-          <img
-            src={APP_CONFIG.brandImage}
-            alt={`Línea gráfica ${APP_CONFIG.name}`}
-            className="h-44 w-full object-cover object-[50%_18%] sm:h-56"
-          />
-        </div>
-
         <p
-          className="animate-fade-up mt-5 font-display text-xl font-bold text-violet sm:text-2xl"
-          style={{ animationDelay: '0.85s' }}
+          className="animate-fade-up mt-5 max-w-lg font-display text-xl font-bold text-navy sm:text-2xl"
+          style={{ animationDelay: '0.55s' }}
         >
           {APP_CONFIG.slogan}
         </p>
 
         <div
           className={cn(
-            'animate-fade-up mt-6 transition',
+            'animate-fade-up mt-7 transition',
             ready ? 'opacity-100' : 'pointer-events-none opacity-0',
           )}
-          style={{ animationDelay: '1.1s' }}
+          style={{ animationDelay: '0.9s' }}
         >
-          <Button className="min-w-52" onClick={finish}>
+          <Button className="brand-gloss min-w-56" onClick={finish}>
             ¡Empezar la aventura!
           </Button>
           <p className="mt-3 text-sm font-semibold text-ink-soft">Toca para entrar al lobby</p>
