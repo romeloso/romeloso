@@ -1,4 +1,5 @@
 import { APP_CONFIG } from '@/config/app'
+import { isIndependentSuccess, recordSkillPractice } from '@/domain/reading/mastery'
 import type {
   GameId,
   GameLevelMeta,
@@ -18,6 +19,7 @@ export function createEmptyReadingStats(): ReadingStats {
     lessonsCompleted: 0,
     correctAnswers: 0,
     totalAnswers: 0,
+    skills: {},
   }
 }
 
@@ -160,14 +162,17 @@ export function applyLessonResult(
     const levelLessons = currentLevel.lessonIds
       .map((id) => lessonProgress[id])
       .filter(Boolean)
-    const avgAccuracy =
-      levelLessons.reduce((sum, item) => sum + (item?.bestAccuracy ?? 0), 0) /
-      Math.max(1, levelLessons.length)
-    const completedEnough =
-      levelLessons.filter((item) => (item?.completions ?? 0) > 0).length >=
-      Math.ceil(levelLessons.length * 0.5)
+    const played = levelLessons.filter((item) => (item?.completions ?? 0) > 0)
+    const readingGate = result.gameId === 'reading'
+    const avgAccuracy = readingGate
+      ? played.reduce((sum, item) => sum + (item?.bestAccuracy ?? 0), 0) / Math.max(1, played.length)
+      : levelLessons.reduce((sum, item) => sum + (item?.bestAccuracy ?? 0), 0) /
+        Math.max(1, levelLessons.length)
+    const threshold = readingGate ? 0.85 : APP_CONFIG.unlockThreshold
+    const neededRatio = readingGate ? 0.8 : 0.5
+    const completedEnough = played.length >= Math.ceil(levelLessons.length * neededRatio)
 
-    if (avgAccuracy >= APP_CONFIG.unlockThreshold && completedEnough) {
+    if (played.length > 0 && avgAccuracy >= threshold && completedEnough) {
       const nextLevel = levels[currentLevelIndex + 1]
       if (nextLevel) {
         unlockedLevelIds.add(nextLevel.id)
@@ -202,6 +207,15 @@ export function applyLessonResult(
       learned.add(word.toUpperCase())
     }
     reading.wordsLearned = [...learned]
+    if (result.skillIds && result.skillIds.length > 0) {
+      const independentCorrect = result.results.filter(isIndependentSuccess).length
+      reading.skills = recordSkillPractice(reading.skills ?? {}, result.skillIds, {
+        independentCorrect,
+        independentTotal: result.results.length,
+        assistedCorrect: result.results.filter((item) => item.correct && !isIndependentSuccess(item)).length,
+        at: new Date().toISOString(),
+      })
+    }
     stats = reading
   }
 

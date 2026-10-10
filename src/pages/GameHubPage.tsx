@@ -17,8 +17,15 @@ import type { GameLevelMeta } from '@/types'
 export function GameHubPage() {
   const { gameSlug } = useParams()
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress, state } = useApp()
+  const { ready, activeProfile, getGameProgress, state } = useApp()
 
+  if (!ready) {
+    return (
+      <PageShell>
+        <p className="font-display text-2xl font-bold">Cargando…</p>
+      </PageShell>
+    )
+  }
   if (!activeProfile) return <Navigate to="/" replace />
 
   const game = gameSlug ? getGameBySlug(gameSlug) : undefined

@@ -16,13 +16,13 @@ export const GAME_DEFINITIONS: GameDefinition[] = [
   {
     id: 'reading',
     slug: 'aprende-a-leer',
-    title: 'Aprende a leer',
+    title: 'Leo y Escribo',
     shortTitle: 'Leer',
-    description: 'Letras, sílabas, palabras e historias divertidas.',
+    description: 'Sonidos, letras, sílabas, palabras, cuentos y escritura.',
     icon: '📚',
     status: 'available',
     accent: BRAND_COLORS.pink,
-    totalLevels: 8,
+    totalLevels: 6,
   },
   {
     id: 'typing',

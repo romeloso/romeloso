@@ -11,7 +11,7 @@ Plataforma educativa infantil (**Sorova Games**).
 - Perfiles dinámicos con fecha de nacimiento y edad
 - Avatares centralizados (galería + fotos subidas)
 - Dashboard con XP, monedas, racha, temas adaptados por edad
-- **Aprende a leer** niveles 1–8: letras, sílabas, palabras, quiz, práctica e historias
+- **Leo y Escribo**: seis mundos (sonidos, letras, sílabas, palabras, historias y escritura), diagnóstico e informe familiar. Detalle en `docs/leo-y-escribo.md`
 - **Teclea como una experta**
 - Panel **Administrador** (PIN `4716`): niños, temas, avatares, progreso y material
 - Recompensas, logros y mapa de aventura

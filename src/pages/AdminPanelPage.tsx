@@ -8,6 +8,8 @@ import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ACCENT_PALETTE } from '@/config/profiles'
 import { useApp } from '@/context/AppContext'
+import { countLeoActivities } from '@/data/games/reading/curriculum'
+import { READING_WORLDS } from '@/data/games/reading/levels'
 import { GAME_DEFINITIONS } from '@/data/games/registry'
 import { overallGameCompletion } from '@/domain/progress'
 import { GradeRangeInputs, GradeSelect } from '@/components/admin/GradeSelect'
@@ -657,10 +659,30 @@ export function AdminPanelPage() {
 
       {tab === 'material' ? (
         <div className="grid gap-6 lg:grid-cols-2">
+          <section className={`${sectionClass} lg:col-span-2`}>
+            <h2 className="font-display text-2xl font-bold">Currículo Leo y Escribo</h2>
+            <p className="mt-1 text-sm font-semibold text-ink-soft">
+              {READING_WORLDS.length} mundos y {countLeoActivities()} actividades publicadas. Las palabras y
+              los cuentos de abajo se suman a La ciudad de las palabras, El reino de las historias y El taller
+              de escritores.
+            </p>
+            <ul className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {READING_WORLDS.map((world) => (
+                <li key={world.id} className="rounded-2xl bg-sand/70 px-3 py-2">
+                  <p className="font-bold">
+                    {world.icon} {world.title}
+                  </p>
+                  <p className="text-sm font-semibold text-ink-soft">
+                    {world.lessonIds.filter((id) => !id.startsWith('reading-admin')).length} lecciones · {world.subtitle}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
           <section className={sectionClass}>
             <h2 className="font-display text-2xl font-bold">Agregar palabra / quiz</h2>
             <p className="mt-1 text-sm font-semibold text-ink-soft">
-              Se integra automáticamente en Quiz y Práctica de lectura según la edad.
+              Se integra en la ciudad de las palabras y en el taller de escritores, según la edad.
             </p>
             <div className="mt-4 space-y-3">
               <input

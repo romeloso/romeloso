@@ -38,7 +38,7 @@ function computeWpm(results: ActivityAttemptResult[], durationMs: number) {
 export function LessonPage() {
   const { gameSlug, lessonId } = useParams()
   const navigate = useNavigate()
-  const { activeProfile, completeLesson, state } = useApp()
+  const { ready, activeProfile, completeLesson, state } = useApp()
   const [finished, setFinished] = useState<{
     result: LessonSessionResult
     reward: RewardPayload
@@ -58,6 +58,13 @@ export function LessonPage() {
     return undefined
   }, [age, game, grade, lessonId, state.contentBank])
 
+  if (!ready) {
+    return (
+      <PageShell>
+        <p className="font-display text-2xl font-bold">Cargando…</p>
+      </PageShell>
+    )
+  }
   if (!activeProfile) return <Navigate to="/" replace />
   if (!game || !lesson) {
     return (
@@ -104,6 +111,9 @@ export function LessonPage() {
               const practice = activity as ReadingPracticeActivity
               if (practice.mode === 'type') words.push(practice.answer)
             }
+            if (activity.kind === 'token_order' && activity.separator === '') {
+              words.push(activity.answer)
+            }
           }
 
           const session: LessonSessionResult = {
@@ -116,6 +126,7 @@ export function LessonPage() {
             durationMs,
             wpm: game.id === 'typing' ? computeWpm(results, durationMs) : undefined,
             words,
+            skillIds: lesson.skillIds,
           }
 
           session.stars =

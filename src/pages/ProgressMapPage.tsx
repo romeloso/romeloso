@@ -77,8 +77,15 @@ function AdventurePath({
 
 export function ProgressMapPage() {
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress, state } = useApp()
+  const { ready, activeProfile, getGameProgress, state } = useApp()
 
+  if (!ready) {
+    return (
+      <PageShell>
+        <p className="font-display text-2xl font-bold">Cargando…</p>
+      </PageShell>
+    )
+  }
   if (!activeProfile) return <Navigate to="/" replace />
 
   const age = effectiveLearningAge(ageFromBirthDate(activeProfile.birthDate), activeProfile.grade)
@@ -96,7 +103,7 @@ export function ProgressMapPage() {
           onOpen={() => navigate('/games/sopa-de-letras')}
         />
         <AdventurePath
-          title="📚 Aventura de lectura"
+          title="📚 Leo y Escribo"
           levels={getAvailableReadingLevels(state.contentBank, age, grade)}
           progress={getGameProgress('reading')}
           onOpen={() => navigate('/games/aprende-a-leer')}

@@ -25,7 +25,7 @@ import type { ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
-  const { activeProfile, getGameProgress, state, updateProfileAvatar, updateChildProfile } =
+  const { ready, activeProfile, getGameProgress, state, updateProfileAvatar, updateChildProfile } =
     useApp()
   const [editingAvatar, setEditingAvatar] = useState(false)
   const [editingBirthDate, setEditingBirthDate] = useState(false)
@@ -39,6 +39,13 @@ export function DashboardPage() {
     [age, grade, state.contentBank.topics],
   )
 
+  if (!ready) {
+    return (
+      <PageShell>
+        <p className="font-display text-2xl font-bold">Cargando…</p>
+      </PageShell>
+    )
+  }
   if (!activeProfile) {
     return <Navigate to="/" replace />
   }
@@ -177,7 +184,7 @@ export function DashboardPage() {
 
       <section className="mb-8 grid gap-4 md:grid-cols-2">
         <div className="rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">
-          <h2 className="font-display text-2xl font-bold">📚 Lectura</h2>
+          <h2 className="font-display text-2xl font-bold">📚 Leo y Escribo</h2>
           <p className="mt-2 font-semibold text-ink-soft">
             Palabras aprendidas: {readingStats?.wordsLearned.length ?? 0}
           </p>
@@ -189,6 +196,9 @@ export function DashboardPage() {
             value={reading ? overallGameCompletion(reading) : 0}
             colorClassName="bg-coral"
           />
+          <Button className="mt-4" onClick={() => navigate('/games/aprende-a-leer')}>
+            Continuar aprendiendo
+          </Button>
         </div>
         <div className="rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">
           <h2 className="font-display text-2xl font-bold">⌨️ Tecleo</h2>

@@ -15,6 +15,7 @@ import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
 import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
+import { READING_WORLD_ORDER } from '@/domain/reading/placement'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
 import { computeLessonRewards } from '@/domain/rewards'
 import { ageFromBirthDate } from '@/lib/age'
@@ -47,6 +48,8 @@ import type {
   GameId,
   GameProgress,
   LessonSessionResult,
+  ReadingPlacement,
+  ReadingStats,
   RewardPayload,
   SessionRole,
   StudyTopic,
@@ -69,6 +72,7 @@ interface AppContextValue {
   toggleSound: () => void
   getGameProgress: (gameId: GameId, profileId?: string) => GameProgress | null
   completeLesson: (result: LessonSessionResult) => CompleteLessonResponse | null
+  saveReadingPlacement: (placement: ReadingPlacement) => void
   resetAllProgress: () => void
   playSound: (name: 'correct' | 'wrong' | 'reward' | 'levelup') => void
   addChildProfile: (input: {
@@ -387,6 +391,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ],
   )
 
+  const saveReadingPlacement = useCallback((placement: ReadingPlacement) => {
+    setState((prev) => {
+      const profileId = prev.activeProfileId
+      if (!profileId) return prev
+      const child = prev.progress[profileId]
+      const reading = child?.reading
+      if (!child || !reading) return prev
+      const age = effectiveLearningAge(
+        ageFromBirthDate(prev.profiles[profileId]?.birthDate),
+        prev.profiles[profileId]?.grade ?? null,
+      )
+      const levels = getAvailableReadingLevels(prev.contentBank, age, prev.profiles[profileId]?.grade ?? null)
+      const targetIndex = Math.max(
+        0,
+        READING_WORLD_ORDER.indexOf(placement.recommendedWorldId as (typeof READING_WORLD_ORDER)[number]),
+      )
+      const unlocked = new Set(reading.unlockedLevelIds)
+      const lessonProgress = { ...reading.lessonProgress }
+      for (const level of levels) {
+        const orderIndex = READING_WORLD_ORDER.indexOf(level.id as (typeof READING_WORLD_ORDER)[number])
+        if (orderIndex < 0 || orderIndex > targetIndex) continue
+        unlocked.add(level.id)
+        for (const lessonId of level.lessonIds) {
+          const existing = lessonProgress[lessonId]
+          if (!existing) continue
+          const firstOfWorld = level.lessonIds[0] === lessonId
+          lessonProgress[lessonId] = {
+            ...existing,
+            unlocked: existing.unlocked || firstOfWorld || orderIndex < targetIndex,
+          }
+        }
+      }
+      const stats: ReadingStats = { ...(reading.stats as ReadingStats), placement }
+      return {
+        ...prev,
+        progress: {
+          ...prev.progress,
+          [profileId]: {
+            ...child,
+            reading: {
+              ...reading,
+              unlockedLevelIds: [...unlocked],
+              lessonProgress,
+              stats,
+            },
+          },
+        },
+      }
+    })
+  }, [])
+
   const resetAllProgress = useCallback(() => {
     const fresh = createInitialAppState(state.soundEnabled)
     setState({
@@ -658,6 +713,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSound,
       getGameProgress,
       completeLesson,
+      saveReadingPlacement,
       resetAllProgress,
       playSound,
       addChildProfile,
@@ -685,6 +741,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleSound,
       getGameProgress,
       completeLesson,
+      saveReadingPlacement,
       resetAllProgress,
       playSound,
       addChildProfile,
