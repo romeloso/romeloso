@@ -9,7 +9,10 @@ import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { StatPill } from '@/components/ui/StatPill'
 import { useApp } from '@/context/AppContext'
-import { GAME_DEFINITIONS } from '@/data/games/registry'
+import { GAME_DEFINITIONS, getGameById } from '@/data/games/registry'
+import { getAvailableReadingLevels, getReadingLessons } from '@/data/games/reading/levels'
+import { getSubjectLessons, getSubjectLevels, SUBJECT_GAME_IDS } from '@/data/subjects/catalog'
+import { recommendNextLessonId } from '@/domain/reading/mastery'
 import { ACHIEVEMENTS } from '@/data/achievements'
 import { overallGameCompletion } from '@/domain/progress'
 import { ageBandFromAge, ageBandLabel, ageFromBirthDate, formatAge } from '@/lib/age'
@@ -21,7 +24,7 @@ import {
 import { formatNumber } from '@/lib/format'
 import { xpProgressWithinLevel } from '@/lib/xp'
 import { getCachedTopicsForLearner } from '@/services/cache/contentCache'
-import type { ReadingStats, TypingStats } from '@/types'
+import type { GameId, GameLevelMeta, LessonDefinition, ReadingStats, TypingStats } from '@/types'
 
 export function DashboardPage() {
   const navigate = useNavigate()
@@ -38,6 +41,39 @@ export function DashboardPage() {
     () => getCachedTopicsForLearner(state.contentBank.topics, { age, grade }),
     [age, grade, state.contentBank.topics],
   )
+  const recommendations = useMemo(() => {
+    if (!activeProfile) return []
+    const readingLevels = getAvailableReadingLevels(state.contentBank, age, grade)
+    const catalog: Array<{ id: GameId; levels: GameLevelMeta[]; lessons: LessonDefinition[] }> = [
+      {
+        id: 'reading',
+        levels: readingLevels,
+        lessons: getReadingLessons(state.contentBank, age, grade),
+      },
+      ...SUBJECT_GAME_IDS.map((id) => ({
+        id,
+        levels: getSubjectLevels(id),
+        lessons: getSubjectLessons(id),
+      })),
+    ]
+    return catalog.flatMap((entry) => {
+      const game = getGameById(entry.id)
+      if (!game) return []
+      const progress = state.progress[activeProfile.id]?.[entry.id] ?? null
+      const lessonId = recommendNextLessonId(progress, entry.levels, entry.lessons)
+      const lesson = entry.lessons.find((item) => item.id === lessonId)
+      if (!lessonId || !lesson) return []
+      return [
+        {
+          id: entry.id,
+          icon: game.icon,
+          label: game.shortTitle,
+          title: lesson.title,
+          href: `/games/${game.slug}/lesson/${lessonId}`,
+        },
+      ]
+    })
+  }, [activeProfile, age, grade, state.contentBank, state.progress])
 
   if (!ready) {
     return (
@@ -216,6 +252,30 @@ export function DashboardPage() {
         </div>
       </section>
 
+      {recommendations.length > 0 ? (
+        <section className="mb-8 rounded-[1.75rem] bg-white/75 p-5 ring-1 ring-ink/5">
+          <h2 className="font-display text-2xl font-bold">Actividades recomendadas</h2>
+          <p className="mt-1 font-semibold text-ink-soft">
+            Cada materia avanza por separado. La edad no elige la dificultad.
+          </p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {recommendations.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => navigate(item.href)}
+                className="rounded-2xl bg-sand/60 px-4 py-3 text-left"
+              >
+                <p className="text-sm font-bold text-teal">
+                  {item.icon} {item.label}
+                </p>
+                <p className="font-display text-xl font-bold">{item.title}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       <div className="mb-4 flex flex-wrap gap-3">
         <Button variant="secondary" onClick={() => navigate('/progress')}>
           🌟 Mi aventura
@@ -223,10 +283,13 @@ export function DashboardPage() {
         <Button variant="secondary" onClick={() => navigate('/achievements')}>
           🏆 Logros
         </Button>
+        <Button variant="secondary" onClick={() => navigate('/familia')}>
+          Informe familiar
+        </Button>
       </div>
 
       <section>
-        <h2 className="mb-4 font-display text-3xl font-bold">Juegos disponibles</h2>
+        <h2 className="mb-4 font-display text-3xl font-bold">Materias y juegos</h2>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {GAME_DEFINITIONS.map((game) => {
             const progress = state.progress[activeProfile.id]?.[game.id]

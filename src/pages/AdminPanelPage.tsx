@@ -10,6 +10,7 @@ import { ACCENT_PALETTE } from '@/config/profiles'
 import { useApp } from '@/context/AppContext'
 import { countLeoActivities } from '@/data/games/reading/curriculum'
 import { READING_WORLDS } from '@/data/games/reading/levels'
+import { countSubjectActivities, getSubjectLevels, SUBJECT_GAME_IDS } from '@/data/subjects/catalog'
 import { GAME_DEFINITIONS } from '@/data/games/registry'
 import { overallGameCompletion } from '@/domain/progress'
 import { GradeRangeInputs, GradeSelect } from '@/components/admin/GradeSelect'
@@ -677,6 +678,29 @@ export function AdminPanelPage() {
                   </p>
                 </li>
               ))}
+            </ul>
+          </section>
+          <section className={`${sectionClass} lg:col-span-2`}>
+            <h2 className="font-display text-2xl font-bold">Otras materias</h2>
+            <p className="mt-1 text-sm font-semibold text-ink-soft">
+              El mismo motor de actividades sirve para matemáticas, ciencias, inglés y tecnología. El contenido
+              vive en datos, no dentro de la pantalla.
+            </p>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              {SUBJECT_GAME_IDS.map((subjectId) => {
+                const game = GAME_DEFINITIONS.find((item) => item.id === subjectId)
+                const worlds = getSubjectLevels(subjectId)
+                return (
+                  <li key={subjectId} className="rounded-2xl bg-sand/70 px-3 py-3">
+                    <p className="font-bold">
+                      {game?.icon} {game?.title}
+                    </p>
+                    <p className="text-sm font-semibold text-ink-soft">
+                      {worlds.length} mundos · {countSubjectActivities(subjectId)} actividades
+                    </p>
+                  </li>
+                )
+              })}
             </ul>
           </section>
           <section className={sectionClass}>

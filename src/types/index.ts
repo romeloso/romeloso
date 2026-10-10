@@ -8,6 +8,7 @@ export type GameId =
   | 'math'
   | 'science'
   | 'english'
+  | 'technology'
   | 'creativity'
 
 export type SessionRole = 'child' | 'admin'
@@ -291,7 +292,15 @@ export interface WordSearchStats {
   wordsFound: number
 }
 
-export type GameStats = ReadingStats | TypingStats | WordSearchStats | Record<string, never>
+/** Progreso de una materia que no es lectura: precisión, intentos y habilidades. */
+export interface SubjectStats {
+  lessonsCompleted: number
+  correctAnswers: number
+  totalAnswers: number
+  skills?: Record<string, SkillProgressRecord>
+}
+
+export type GameStats = ReadingStats | TypingStats | WordSearchStats | SubjectStats | Record<string, never>
 
 export interface AchievementDefinition {
   id: string

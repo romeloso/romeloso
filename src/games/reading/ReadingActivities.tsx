@@ -277,7 +277,9 @@ function WordQuizView({
     <div className="space-y-6 text-center">
       <p className="text-lg font-bold text-ink-soft">{activity.prompt}</p>
       {activity.image ? <p className="text-7xl">{activity.image}</p> : null}
-      <p className="rounded-2xl bg-sand px-4 py-3 text-base font-bold text-ink">{activity.clue}</p>
+      {activity.clue && activity.clue !== activity.prompt ? (
+        <p className="rounded-2xl bg-sand px-4 py-3 text-base font-bold text-ink">{activity.clue}</p>
+      ) : null}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {activity.options.map((option) => {
           const isPicked = picked === option.value
