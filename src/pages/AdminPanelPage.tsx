@@ -8,6 +8,7 @@ import { PageShell } from '@/components/ui/PageShell'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { ACCENT_PALETTE } from '@/config/profiles'
 import { useApp } from '@/context/AppContext'
+import { visibleChildProfiles } from '@/domain/accessCode'
 import { countLeoActivities } from '@/data/games/reading/curriculum'
 import { READING_WORLDS } from '@/data/games/reading/levels'
 import { countSubjectActivities, getSubjectLevels, SUBJECT_GAME_IDS } from '@/data/subjects/catalog'
@@ -20,7 +21,7 @@ import { fileToAvatarDataUrl } from '@/lib/image'
 import { formatNumber, formatPercent } from '@/lib/format'
 import type { GameId, ReadingStats, TypingStats } from '@/types'
 
-type Tab = 'children' | 'topics' | 'avatars' | 'progress' | 'material'
+type Tab = 'tutors' | 'children' | 'topics' | 'avatars' | 'progress' | 'material'
 
 const inputClass = 'w-full rounded-xl border-2 border-ink/10 px-3 py-2 font-bold'
 const sectionClass = 'rounded-[1.75rem] bg-white/90 p-5 ring-1 ring-ink/5'
@@ -67,12 +68,16 @@ function AgeRangeInputs({
 export function AdminPanelPage() {
   const navigate = useNavigate()
   const {
-    isAdmin,
+    canManage,
+    isSuperadmin,
     state,
-    logoutAdmin,
+    logoutStaff,
     addChildProfile,
     updateChildProfile,
     removeChildProfile,
+    addTutor,
+    setTutorActive,
+    regenerateTutorCode,
     addWordMaterial,
     addPassageMaterial,
     removeWordMaterial,
@@ -95,6 +100,8 @@ export function AdminPanelPage() {
   const [childGrade, setChildGrade] = useState<SchoolGrade | null>(null)
   const [childAccent, setChildAccent] = useState<string>(ACCENT_PALETTE[0]!)
   const [childAvatarSrc, setChildAvatarSrc] = useState('')
+  const [childTutorId, setChildTutorId] = useState('')
+  const [tutorName, setTutorName] = useState('')
 
   const [topicSubject, setTopicSubject] = useState<GameId>('reading')
   const [topicTitle, setTopicTitle] = useState('')
@@ -127,15 +134,17 @@ export function AdminPanelPage() {
   const [passageMinGrade, setPassageMinGrade] = useState(0)
   const [passageMaxGrade, setPassageMaxGrade] = useState(6)
 
-  const profiles = useMemo(() => Object.values(state.profiles), [state.profiles])
+  const profiles = useMemo(() => visibleChildProfiles(state), [state])
+  const tutors = useMemo(() => Object.values(state.tutors), [state.tutors])
   const library = state.contentBank.avatarLibrary
   const topics = state.contentBank.topics
 
-  if (!isAdmin) return <Navigate to="/" replace />
+  if (!canManage) return <Navigate to="/" replace />
 
   const flash = (message: string) => setSavedMessage(message)
 
   const tabs: { id: Tab; label: string }[] = [
+    ...(isSuperadmin ? [{ id: 'tutors' as const, label: 'Tutores' }] : []),
     { id: 'children', label: 'Niños' },
     { id: 'topics', label: 'Temas' },
     { id: 'avatars', label: 'Avatares' },
@@ -148,19 +157,23 @@ export function AdminPanelPage() {
       <TopBar backTo="/" backLabel="Inicio" />
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-4xl font-bold">Panel Administrador</h1>
+          <h1 className="font-display text-4xl font-bold">
+            {isSuperadmin ? 'Panel del superadministrador' : 'Panel del tutor'}
+          </h1>
           <p className="font-semibold text-ink-soft">
-            Gestiona niños, edades, temas de estudio y fotos de perfil
+            {isSuperadmin
+              ? 'Crea tutores y revisa los perfiles de todos los niños.'
+              : 'Crea los perfiles de tus niños. Cada uno entra con su código.'}
           </p>
         </div>
         <Button
           variant="secondary"
           onClick={() => {
-            logoutAdmin()
+            logoutStaff()
             navigate('/')
           }}
         >
-          Cerrar sesión admin
+          Cerrar sesión
         </Button>
       </div>
 
@@ -180,12 +193,87 @@ export function AdminPanelPage() {
         <p className="mb-4 rounded-2xl bg-mint/60 px-4 py-3 font-bold text-ink">{savedMessage}</p>
       ) : null}
 
+      {tab === 'tutors' && isSuperadmin ? (
+        <div className="grid gap-6 lg:grid-cols-[1fr_1.4fr]">
+          <section className={sectionClass}>
+            <h2 className="font-display text-2xl font-bold">Nuevo tutor</h2>
+            <p className="mt-1 text-sm font-semibold text-ink-soft">
+              El tutor crea los perfiles de sus niños y ve solo su progreso. Comparte el código con esa familia.
+            </p>
+            <div className="mt-4 space-y-3">
+              <input
+                className={inputClass}
+                placeholder="Nombre del tutor"
+                value={tutorName}
+                onChange={(event) => setTutorName(event.target.value)}
+              />
+              <Button
+                onClick={() => {
+                  try {
+                    const tutor = addTutor(tutorName)
+                    setTutorName('')
+                    flash(`Cuenta creada. El código de ${tutor.name} es ${tutor.accessCode}.`)
+                  } catch (error) {
+                    flash(error instanceof Error ? error.message : 'No se pudo crear el tutor')
+                  }
+                }}
+              >
+                Crear tutor
+              </Button>
+            </div>
+          </section>
+          <section className={sectionClass}>
+            <h2 className="font-display text-2xl font-bold">Cuentas ({tutors.length})</h2>
+            <ul className="mt-4 space-y-3">
+              {tutors.map((tutor) => {
+                const children = Object.values(state.profiles).filter((profile) => profile.tutorId === tutor.id)
+                return (
+                  <li key={tutor.id} className="rounded-2xl bg-sand/70 p-4">
+                    <p className="font-display text-xl font-bold">{tutor.name}</p>
+                    <p className="mt-1 font-bold">Código: {tutor.accessCode}</p>
+                    <p className="text-sm font-semibold text-ink-soft">
+                      {tutor.active ? 'Activa' : 'Desactivada'} · {children.length}{' '}
+                      {children.length === 1 ? 'perfil' : 'perfiles'}
+                    </p>
+                    {children.length > 0 ? (
+                      <ul className="mt-2 space-y-1 text-sm font-semibold">
+                        {children.map((profile) => (
+                          <li key={profile.id}>
+                            {profile.name}: {profile.accessCode ?? 'sin código'}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button size="md" variant="secondary" onClick={() => setTutorActive(tutor.id, !tutor.active)}>
+                        {tutor.active ? 'Desactivar' : 'Activar'}
+                      </Button>
+                      <Button
+                        size="md"
+                        variant="secondary"
+                        onClick={() => {
+                          const next = regenerateTutorCode(tutor.id)
+                          if (next) flash(`Nuevo código de ${tutor.name}: ${next}`)
+                        }}
+                      >
+                        Nuevo código
+                      </Button>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </section>
+        </div>
+      ) : null}
+
       {tab === 'children' ? (
         <div className="grid gap-6 lg:grid-cols-[1.1fr_1.4fr]">
           <section className={sectionClass}>
             <h2 className="font-display text-2xl font-bold">Agregar niño o niña</h2>
             <p className="mt-1 text-sm font-semibold text-ink-soft">
-              Indica el grado y la fecha de nacimiento para adaptar la dificultad y los temas.
+              El código se forma con el nombre y la fecha: día, mes y los dos últimos números del año.
+              Sophia, 4 de diciembre de 2017, entra con SOPHIA041217.
             </p>
             <div className="mt-4 space-y-3">
               <input
@@ -194,6 +282,23 @@ export function AdminPanelPage() {
                 value={childName}
                 onChange={(e) => setChildName(e.target.value)}
               />
+              {isSuperadmin ? (
+                <label className="block text-sm font-bold text-ink-soft">
+                  Tutor a cargo
+                  <select
+                    className={`${inputClass} mt-1`}
+                    value={childTutorId}
+                    onChange={(event) => setChildTutorId(event.target.value)}
+                  >
+                    <option value="">Elige un tutor</option>
+                    {tutors.map((tutor) => (
+                      <option key={tutor.id} value={tutor.id}>
+                        {tutor.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
               <GradeSelect value={childGrade} onChange={setChildGrade} />
               <label className="block text-sm font-bold text-ink-soft">
                 Fecha de nacimiento
@@ -244,20 +349,24 @@ export function AdminPanelPage() {
               ) : null}
               <Button
                 onClick={() => {
-                  if (!childName.trim()) return
+                  if (!childName.trim() || !childBirthDate) {
+                    flash('Escribe el nombre y la fecha de nacimiento para crear el código.')
+                    return
+                  }
                   try {
-                    addChildProfile({
+                    const profile = addChildProfile({
                       name: childName,
-                      birthDate: childBirthDate || null,
+                      birthDate: childBirthDate,
                       grade: childGrade,
                       accent: childAccent,
                       avatarImage: childAvatarSrc || undefined,
+                      tutorId: isSuperadmin ? childTutorId : undefined,
                     })
                     setChildName('')
                     setChildBirthDate('')
                     setChildGrade(null)
                     setChildAvatarSrc('')
-                    flash('Niño o niña agregado. Ya aparece en la selección de perfiles.')
+                    flash(`${profile.name} ya puede entrar con el código ${profile.accessCode}.`)
                   } catch (error) {
                     flash(error instanceof Error ? error.message : 'No se pudo agregar el perfil')
                   }
@@ -287,26 +396,53 @@ export function AdminPanelPage() {
                         <input
                           className={inputClass}
                           value={profile.name}
-                          onChange={(e) =>
-                            updateChildProfile(profile.id, { name: e.target.value })
-                          }
+                          onChange={(e) => {
+                            const result = updateChildProfile(profile.id, { name: e.target.value })
+                            if (!result.ok && result.error) flash(result.error)
+                          }}
                         />
+                        <p className="rounded-xl bg-white px-3 py-2 font-bold text-ink">
+                          Código: {profile.accessCode ?? 'Falta la fecha de nacimiento'}
+                        </p>
                         <GradeSelect
                           value={profile.grade}
                           onChange={(grade) => updateChildProfile(profile.id, { grade })}
                           label={`Grado escolar · ${formatGrade(profile.grade)}`}
                         />
+                        {isSuperadmin ? (
+                          <label className="block text-sm font-bold text-ink-soft">
+                            Tutor a cargo
+                            <select
+                              className={`${inputClass} mt-1`}
+                              value={profile.tutorId ?? ''}
+                              onChange={(event) => {
+                                const result = updateChildProfile(profile.id, {
+                                  tutorId: event.target.value || null,
+                                })
+                                if (!result.ok && result.error) flash(result.error)
+                              }}
+                            >
+                              <option value="">Sin tutor</option>
+                              {tutors.map((tutor) => (
+                                <option key={tutor.id} value={tutor.id}>
+                                  {tutor.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        ) : null}
                         <label className="block text-sm font-bold text-ink-soft">
                           Fecha de nacimiento · {formatAge(age)}
                           <input
                             type="date"
                             className={`${inputClass} mt-1`}
                             value={profile.birthDate ?? ''}
-                            onChange={(e) =>
-                              updateChildProfile(profile.id, {
+                            onChange={(e) => {
+                              const result = updateChildProfile(profile.id, {
                                 birthDate: e.target.value || null,
                               })
-                            }
+                              if (!result.ok && result.error) flash(result.error)
+                            }}
                           />
                         </label>
                         <div className="flex flex-wrap gap-2">
