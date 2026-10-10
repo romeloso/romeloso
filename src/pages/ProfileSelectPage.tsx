@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LobbyIntro, shouldShowLobbyIntro } from '@/components/brand/LobbyIntro'
-import { BrandLogo } from '@/components/brand/BrandLogo'
 import { TopBar } from '@/components/layout/TopBar'
 import { ProfileCard } from '@/components/profile/ProfileCard'
 import { Button } from '@/components/ui/Button'
@@ -31,8 +30,15 @@ export function ProfileSelectPage() {
     <PageShell wide>
       <TopBar />
       <section className="mb-8 text-center">
-        <div className="mb-5 flex justify-center">
-          <BrandLogo size="lg" showTagline />
+        <div className="mb-4 flex justify-center">
+          <img
+            src={APP_CONFIG.brandImage}
+            alt={`${APP_CONFIG.name} — ${APP_CONFIG.tagline}`}
+            className="animate-brand-float h-auto w-full max-w-md select-none object-contain sm:max-w-lg"
+            width={933}
+            height={797}
+            decoding="async"
+          />
         </div>
         <h1 className="font-display text-4xl font-bold text-ink sm:text-5xl text-balance">
           ¿Quién va a jugar hoy?

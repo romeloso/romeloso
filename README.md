@@ -15,7 +15,7 @@ Plataforma educativa infantil (**Sorova Games**).
 - **Teclea como una experta**
 - Panel **Administrador** (PIN `4716`): niños, temas, avatares, progreso y material
 - Recompensas, logros y mapa de aventura
-- Persistencia local + esquema Supabase preparado (`src/supabase/schema.sql`)
+- Persistencia en PostgreSQL de Railway (`server/`) y copia local si la base no responde
 
 El nombre de la app se cambia en `src/config/app.ts`.
 
@@ -24,13 +24,14 @@ El nombre de la app se cambia en `src/config/app.ts`.
 - React + TypeScript (Vite)
 - Tailwind CSS
 - React Router
-- Supabase (preparado; el MVP usa `localStorage`)
+- PostgreSQL en Railway (`DATABASE_URL`) con respaldo en `localStorage`
 
 ## Desarrollo
 
 ```bash
 npm install
 npm run dev
+npm run dev:api   # opcional, si DATABASE_URL apunta a Postgres
 ```
 
 ```bash
