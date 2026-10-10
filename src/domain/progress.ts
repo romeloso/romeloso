@@ -9,6 +9,7 @@ import type {
   LessonSessionResult,
   LevelProgress,
   ReadingStats,
+  SubjectStats,
   TypingStats,
 } from '@/types'
 import { starsFromAccuracy } from '@/domain/rewards'
@@ -21,6 +22,21 @@ export function createEmptyReadingStats(): ReadingStats {
     totalAnswers: 0,
     skills: {},
   }
+}
+
+export function createEmptySubjectStats(): SubjectStats {
+  return {
+    lessonsCompleted: 0,
+    correctAnswers: 0,
+    totalAnswers: 0,
+    skills: {},
+  }
+}
+
+const MASTERY_GAMES = new Set<GameId>(['reading', 'math', 'science', 'english', 'technology'])
+
+export function usesMasteryGate(gameId: GameId) {
+  return MASTERY_GAMES.has(gameId)
 }
 
 export function createEmptyTypingStats(): TypingStats {
@@ -61,11 +77,13 @@ export function createInitialGameProgress(
     stats:
       gameId === 'reading'
         ? createEmptyReadingStats()
-        : gameId === 'typing'
-          ? createEmptyTypingStats()
-          : gameId === 'wordsearch'
-            ? { puzzlesCompleted: 0, wordsFound: 0 }
-            : {},
+        : usesMasteryGate(gameId)
+          ? createEmptySubjectStats()
+          : gameId === 'typing'
+            ? createEmptyTypingStats()
+            : gameId === 'wordsearch'
+              ? { puzzlesCompleted: 0, wordsFound: 0 }
+              : {},
   }
 }
 
@@ -163,7 +181,7 @@ export function applyLessonResult(
       .map((id) => lessonProgress[id])
       .filter(Boolean)
     const played = levelLessons.filter((item) => (item?.completions ?? 0) > 0)
-    const readingGate = result.gameId === 'reading'
+    const readingGate = usesMasteryGate(result.gameId)
     const avgAccuracy = readingGate
       ? played.reduce((sum, item) => sum + (item?.bestAccuracy ?? 0), 0) / Math.max(1, played.length)
       : levelLessons.reduce((sum, item) => sum + (item?.bestAccuracy ?? 0), 0) /
@@ -217,6 +235,21 @@ export function applyLessonResult(
       })
     }
     stats = reading
+  } else if (usesMasteryGate(result.gameId)) {
+    const subject = { ...createEmptySubjectStats(), ...(stats as Partial<SubjectStats>) }
+    subject.lessonsCompleted += 1
+    subject.correctAnswers += result.results.filter((item) => item.correct).length
+    subject.totalAnswers += result.results.length
+    if (result.skillIds && result.skillIds.length > 0) {
+      const independentCorrect = result.results.filter(isIndependentSuccess).length
+      subject.skills = recordSkillPractice(subject.skills ?? {}, result.skillIds, {
+        independentCorrect,
+        independentTotal: result.results.length,
+        assistedCorrect: result.results.filter((item) => item.correct && !isIndependentSuccess(item)).length,
+        at: new Date().toISOString(),
+      })
+    }
+    stats = subject
   }
 
   if (result.gameId === 'typing') {

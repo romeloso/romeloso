@@ -1,5 +1,5 @@
 import { skillStatusLabel } from '@/domain/reading/mastery'
-import type { ReadingStats, SkillMasteryStatus } from '@/types'
+import type { SkillMasteryStatus, SkillProgressRecord } from '@/types'
 
 export interface FamilySkillLine {
   id: string
@@ -8,10 +8,14 @@ export interface FamilySkillLine {
   label: string
 }
 
-export function familySkillLines(
-  stats: ReadingStats | undefined,
-  titles: Record<string, string>,
-): FamilySkillLine[] {
+type FamilyStats =
+  | {
+      skills?: Record<string, SkillProgressRecord>
+      placement?: { summary?: string }
+    }
+  | undefined
+
+export function familySkillLines(stats: FamilyStats, titles: Record<string, string>): FamilySkillLine[] {
   const skills = stats?.skills ?? {}
   return Object.values(skills)
     .map((record) => ({
@@ -24,14 +28,19 @@ export function familySkillLines(
 }
 
 /** Informe breve para una familia, sin etiquetas negativas. */
-export function familyNarrative(name: string, stats: ReadingStats | undefined, titles: Record<string, string>) {
+export function familyNarrative(
+  name: string,
+  stats: FamilyStats,
+  titles: Record<string, string>,
+  subjectName = 'Leo y Escribo',
+) {
   const lines = familySkillLines(stats, titles)
   const mastered = lines.filter((line) => line.status === 'mastered').map((line) => line.title)
   const support = lines.filter((line) => line.status === 'needs_support').map((line) => line.title)
   const developing = lines.filter((line) => line.status === 'developing').map((line) => line.title)
 
   if (lines.length === 0) {
-    return `${name} todavía no tiene práctica guardada en Leo y Escribo. Un juego corto de inicio ayuda a elegir el primer mundo. Recomendamos unos minutos de sonidos o letras y volver a practicar mañana.`
+    return `${name} todavía no tiene práctica guardada en ${subjectName}. Un juego corto de inicio ayuda a elegir el primer mundo. Recomendamos unos minutos y volver a practicar mañana.`
   }
 
   const known = mastered.length > 0 ? `${name} ya domina: ${mastered.slice(0, 3).join(', ')}.` : `${name} está empezando el recorrido.`

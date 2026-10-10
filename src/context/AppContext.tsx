@@ -14,6 +14,7 @@ import { evaluateAchievements } from '@/data/achievements'
 import { getAvailableReadingLevels } from '@/data/games/reading/levels'
 import { TYPING_LEVELS } from '@/data/games/typing/levels'
 import { getWordSearchLevels } from '@/data/games/wordsearch/levels'
+import { getSubjectLevels, SUBJECT_GAME_IDS } from '@/data/subjects/catalog'
 import { evaluateAdaptiveDifficulty } from '@/domain/adaptive'
 import { READING_WORLD_ORDER } from '@/domain/reading/placement'
 import { applyLessonResult, syncGameProgressWithLevels } from '@/domain/progress'
@@ -205,6 +206,12 @@ function migrateState(raw: AppState | null): AppState {
     } else {
       merged.wordsearch = defaults.wordsearch
     }
+    for (const subjectId of SUBJECT_GAME_IDS) {
+      merged[subjectId] = syncGameProgressWithLevels(
+        merged[subjectId] ?? defaults[subjectId],
+        getSubjectLevels(subjectId),
+      )
+    }
     return [childId, merged] as const
   })
 
@@ -338,7 +345,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             ? TYPING_LEVELS.filter((level) => level.lessonIds.length > 0)
             : result.gameId === 'wordsearch'
               ? getWordSearchLevels(age, grade)
-              : []
+              : getSubjectLevels(result.gameId)
 
       const currentGameProgress = childProgress[result.gameId]
       const nextGameProgress = applyLessonResult(currentGameProgress, levels, [], result)

@@ -7,6 +7,7 @@ import { useApp } from '@/context/AppContext'
 import { getGameBySlug } from '@/data/games/registry'
 import { getReadingLesson } from '@/data/games/reading/levels'
 import { getTypingLesson } from '@/data/games/typing/levels'
+import { getSubjectLesson } from '@/data/subjects/catalog'
 import { ReadingActivityView } from '@/games/reading/ReadingActivities'
 import { TypingActivityView } from '@/games/typing/TypingActivities'
 import { ageFromBirthDate } from '@/lib/age'
@@ -55,7 +56,7 @@ export function LessonPage() {
     if (!lessonId || !game) return undefined
     if (game.id === 'reading') return getReadingLesson(lessonId, state.contentBank, age, grade)
     if (game.id === 'typing') return getTypingLesson(lessonId)
-    return undefined
+    return getSubjectLesson(game.id, lessonId)
   }, [age, game, grade, lessonId, state.contentBank])
 
   if (!ready) {
@@ -86,10 +87,10 @@ export function LessonPage() {
         lesson={lesson}
         onExit={() => navigate(`/games/${game.slug}`)}
         renderActivity={({ activity, onResolved }) =>
-          game.id === 'reading' ? (
-            <ReadingActivityView activity={activity} onResolved={onResolved} />
-          ) : (
+          game.id === 'typing' ? (
             <TypingActivityView activity={activity} onResolved={onResolved} />
+          ) : (
+            <ReadingActivityView activity={activity} onResolved={onResolved} />
           )
         }
         onComplete={(results, durationMs) => {
